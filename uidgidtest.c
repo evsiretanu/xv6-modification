@@ -8,21 +8,20 @@ void check_setuid(int uid) {
   int maxbound = 32767;
 
   //Check if set_uid returns a success code
-  printf(1, "set uid to %d... ", uid);
+  printf(1, "set uid to %d...  ", uid);
   ret = setuid(uid);
-
   // Check if the given uid should be set
   if (uid >= minbound && uid <= maxbound) {
     if (ret < 0)
-      printf(1, "fail\n");
+      printf(1, "FAIL\n");
     else
-      printf(1, "ok\n");
+      printf(1, "OK\n");
   } else {
     // Check if the given uid should not be set
     if(ret == 0)
-      printf(1, "fail\n");
+      printf(1, "FAIL\n");
     else if (ret < 0)
-      printf(1, "ok\n");
+      printf(1, "OK\n");
   }
 }
 
@@ -33,14 +32,38 @@ void check_getuid(int lastuid) {
   printf(1, "get uid (should be %d)... ", lastuid);
   ret = getuid();
   if(ret != lastuid)
-    printf(1, "fail. returned: %d\n", ret);
+    printf(1, "FAIL. returned: %d\n", ret);
   else
-    printf(1, "ok\n");
+    printf(1, "OK\n");
+}
+
+void check_ppid() {
+  int parent_pid;
+
+  parent_pid = getpid();
+  printf(1, "\ncurrent pid: %d\n", parent_pid);
+  printf(1, "forking to check for ppid functionality... \n");
+  int rc = fork();
+  if(rc < 0) {
+    // failed
+    printf(1, "fork failed.\n");
+  } else if (rc == 0) {
+    //child
+    printf(1, "[child] child pid: %d\n", getpid());
+    printf(1, "[child] get ppid (should be == to parent pid)...");
+    if(getppid() == parent_pid) {
+      printf(1, "OK\n");
+    } else {
+      printf(1, "FAIL. returned: %d\n", getppid());
+    }
+    exit();   // Exit the child, since it's not needed anymore
+  } else {
+    // parent
+    wait();
+  }
 }
 
 int main(int arg, char *argv[]) {
-  int parent_pid;
-
   printf(1, "current uid: %d\n", getuid());
   check_setuid(32767);
   check_getuid(32767);
@@ -52,27 +75,7 @@ int main(int arg, char *argv[]) {
   check_getuid(100);
   check_setuid(33000);
   check_getuid(100);
-
-  parent_pid = getpid();
-  printf(1, "\ncurrent pid: %d\n", parent_pid);
-  printf(1, "forking to check for ppid functionality... \n");
-  int rc = fork();
-  if(rc < 0) {
-    // failed
-    printf(1, "fork failed.\n");
-  } else if (rc == 0) {
-    //child
-    printf(1, "child pid: %d\n", getpid());
-    printf(1, "get ppid (should be == to parent pid)...");
-    if(getppid() == parent_pid) {
-      printf(1, "ok\n");
-    } else {
-      printf(1, "failed. returned: %d\n", getppid());
-    }
-  } else {
-    // parent
-    wait();
-  }
+  check_ppid();
 
 
   exit();

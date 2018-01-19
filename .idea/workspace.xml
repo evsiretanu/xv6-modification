@@ -13,12 +13,7 @@
   <component name="ChangeListManager">
     <list default="true" id="4c8d30a2-ddc4-41da-aad0-5e8ccd8705f3" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change beforePath="$PROJECT_DIR$/syscall.c" afterPath="$PROJECT_DIR$/syscall.c" />
-      <change beforePath="$PROJECT_DIR$/syscall.h" afterPath="$PROJECT_DIR$/syscall.h" />
-      <change beforePath="$PROJECT_DIR$/sysproc.c" afterPath="$PROJECT_DIR$/sysproc.c" />
       <change beforePath="$PROJECT_DIR$/uidgidtest.c" afterPath="$PROJECT_DIR$/uidgidtest.c" />
-      <change beforePath="$PROJECT_DIR$/user.h" afterPath="$PROJECT_DIR$/user.h" />
-      <change beforePath="$PROJECT_DIR$/usys.S" afterPath="$PROJECT_DIR$/usys.S" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -92,7 +87,7 @@
       <file leaf-file-name="proc.c" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/proc.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="30">
+            <state relative-caret-position="435">
               <caret line="36" column="17" lean-forward="false" selection-start-line="36" selection-start-column="17" selection-end-line="36" selection-end-column="17" />
               <folding />
             </state>
@@ -134,8 +129,8 @@
       <file leaf-file-name="uidgidtest.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/uidgidtest.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="56" column="32" lean-forward="false" selection-start-line="56" selection-start-column="32" selection-end-line="56" selection-end-column="32" />
+            <state relative-caret-position="374">
+              <caret line="54" column="17" lean-forward="false" selection-start-line="54" selection-start-column="17" selection-end-line="54" selection-end-column="17" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -157,9 +152,9 @@
       <find>pid</find>
       <find>state</find>
       <find>initlo</find>
-      <find>pinit</find>
       <find>upti</find>
       <find>getp</find>
+      <find>pinit</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -244,6 +239,7 @@
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="settings.editor.selected.configurable" value="preferences.sourceCode.C/C++" />
+    <property name="last_opened_file_path" value="$USER_HOME$/CLionProjects/untitled2" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -283,12 +279,12 @@
       <option name="presentableId" value="Default" />
       <updated>1516328547604</updated>
       <workItem from="1516328552953" duration="21000" />
-      <workItem from="1516328577856" duration="16548000" />
+      <workItem from="1516328577856" duration="19779000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="16569000" />
+    <option name="totallyTimeSpent" value="19800000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="-1" width="1366" height="741" extended-state="6" />
@@ -478,14 +474,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/proc.c">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30">
-          <caret line="36" column="17" lean-forward="false" selection-start-line="36" selection-start-column="17" selection-end-line="36" selection-end-column="17" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/sysproc.c">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="813">
@@ -513,10 +501,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/proc.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="435">
+          <caret line="36" column="17" lean-forward="false" selection-start-line="36" selection-start-column="17" selection-end-line="36" selection-end-column="17" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/uidgidtest.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="56" column="32" lean-forward="false" selection-start-line="56" selection-start-column="32" selection-end-line="56" selection-end-column="32" />
+        <state relative-caret-position="374">
+          <caret line="54" column="17" lean-forward="false" selection-start-line="54" selection-start-column="17" selection-end-line="54" selection-end-column="17" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
