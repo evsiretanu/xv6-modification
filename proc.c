@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "uproc.h"
 
 struct {
   struct spinlock lock;
@@ -515,13 +516,13 @@ static char *states[] = {
 void
 procdump(void)
 {
-  int i;
+  int i, elapsed;
   struct proc *p;
   char *state;
   uint pc[10];
-  
+
+  #define CS333_P1 1
   #ifdef CS333_P1
-  int elapsed;
   cprintf("\nPID\tState\tName\tElapsed\t PCs\n");
   #endif
 
@@ -547,4 +548,35 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+int
+getuprocs(int max, struct uproc *procs) {
+  int size = 0;
+  struct proc *p;
+
+  if(max < 0)
+    return -1;
+
+  acquire(&ptable.lock);  // Lock ptable so nothing else uses it
+  for(p = ptable.proc; p < &ptable.proc[NPROC] && size < max; p++){
+    if(p->state != EMBRYO && p->state != UNUSED) {
+      procs->pid = p->pid;
+      procs->uid = p->uid;
+      procs->gid = p->gid;
+      if(p->pid == 1)
+        procs->ppid = 1;
+      else
+        procs->ppid = p->parent->pid;
+      procs->elapsed_ticks = ticks - p ->start_ticks;
+      procs->CPU_total_ticks = p->cpu_ticks_total;
+      procs->size = p->sz;
+      safestrcpy(procs->state, states[p->state], sizeof(procs->state));
+      safestrcpy(procs->name, p->name, sizeof(procs->name));
+      size++;
+      procs++;
+    }
+  }
+  release(&ptable.lock);
+  return size;
 }

@@ -1,6 +1,7 @@
 #define CS333_P1 1
 struct stat;
 struct rtcdate;
+struct uproc;
 
 // system calls
 int fork(void);
@@ -39,6 +40,7 @@ int setgid(uint);
 uint getuid(void);
 uint getgid(void);
 uint getppid(void);
+int getprocs(uint max, struct uproc*);
 
 
 // ulib.c
