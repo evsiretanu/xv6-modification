@@ -130,12 +130,17 @@ sys_setgid(void) {
   if(gid < 0 || gid > 32767)  // Check for gid validity
     return -1;
 
-  proc->uid = (uint)gid;
+  proc->gid = (uint)gid;
   return 0;
 }
 
 int
 sys_getuid(void) {
   return proc->uid;
+}
+
+int
+sys_getgid(void) {
+  return proc->gid;
 }
 

@@ -26,3 +26,4 @@
 #define SYS_setuid  SYS_date+1
 #define SYS_getuid  SYS_setuid+1
 #define SYS_setgid  SYS_getuid+1
+#define SYS_getgid  SYS_setgid+1

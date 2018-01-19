@@ -108,6 +108,7 @@ extern int sys_date(void);
 extern int sys_setuid(void);
 extern int sys_setgid(void);
 extern int sys_getuid(void);
+extern int sys_getgid(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -138,6 +139,7 @@ static int (*syscalls[])(void) = {
 [SYS_setuid]  sys_setuid,
 [SYS_getuid]  sys_getuid,
 [SYS_setgid]  sys_setgid,
+[SYS_getgid]  sys_getgid,
 
 };
 
