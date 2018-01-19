@@ -393,6 +393,9 @@
 		<Unit filename="/home/evghenii/Desktop/CS333/p2_xv6/uart.c">
 			<Option target="p2_xv6"/>
 		</Unit>
+		<Unit filename="/home/evghenii/Desktop/CS333/p2_xv6/uidgidtest.c">
+			<Option target="p2_xv6"/>
+		</Unit>
 		<Unit filename="/home/evghenii/Desktop/CS333/p2_xv6/ulib.c">
 			<Option target="p2_xv6"/>
 		</Unit>

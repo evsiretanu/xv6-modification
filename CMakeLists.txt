@@ -116,4 +116,4 @@ add_executable(p2_xv6
         wc.c
         x86.h
         zombie.c
-        tuid.c tuid.c)
+        tuid.c tuid.c uidgidtest.c)

@@ -56,6 +56,7 @@ set(CMAKE_DEPENDS_CHECK_C
   "/home/evghenii/Desktop/CS333/p2_xv6/trap.c" "/home/evghenii/Desktop/CS333/p2_xv6/cmake-build-debug/CMakeFiles/p2_xv6.dir/trap.c.o"
   "/home/evghenii/Desktop/CS333/p2_xv6/tuid.c" "/home/evghenii/Desktop/CS333/p2_xv6/cmake-build-debug/CMakeFiles/p2_xv6.dir/tuid.c.o"
   "/home/evghenii/Desktop/CS333/p2_xv6/uart.c" "/home/evghenii/Desktop/CS333/p2_xv6/cmake-build-debug/CMakeFiles/p2_xv6.dir/uart.c.o"
+  "/home/evghenii/Desktop/CS333/p2_xv6/uidgidtest.c" "/home/evghenii/Desktop/CS333/p2_xv6/cmake-build-debug/CMakeFiles/p2_xv6.dir/uidgidtest.c.o"
   "/home/evghenii/Desktop/CS333/p2_xv6/ulib.c" "/home/evghenii/Desktop/CS333/p2_xv6/cmake-build-debug/CMakeFiles/p2_xv6.dir/ulib.c.o"
   "/home/evghenii/Desktop/CS333/p2_xv6/umalloc.c" "/home/evghenii/Desktop/CS333/p2_xv6/cmake-build-debug/CMakeFiles/p2_xv6.dir/umalloc.c.o"
   "/home/evghenii/Desktop/CS333/p2_xv6/usertests.c" "/home/evghenii/Desktop/CS333/p2_xv6/cmake-build-debug/CMakeFiles/p2_xv6.dir/usertests.c.o"

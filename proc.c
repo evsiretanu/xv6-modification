@@ -97,6 +97,10 @@ userinit(void)
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
 
+  // Set the uid and gid to default
+  p->uid = DEFUID;
+  p->gid = DEFGID;
+
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
@@ -158,6 +162,10 @@ fork(void)
   safestrcpy(np->name, proc->name, sizeof(proc->name));
  
   pid = np->pid;
+
+  // Copy the uid and the gid of the parent
+  np->uid = proc->uid;
+  np->gid = proc->gid;
 
   // lock to force the compiler to emit the np->state write last.
   acquire(&ptable.lock);

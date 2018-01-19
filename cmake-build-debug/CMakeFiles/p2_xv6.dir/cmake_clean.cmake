@@ -57,6 +57,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/p2_xv6.dir/wc.c.o"
   "CMakeFiles/p2_xv6.dir/zombie.c.o"
   "CMakeFiles/p2_xv6.dir/tuid.c.o"
+  "CMakeFiles/p2_xv6.dir/uidgidtest.c.o"
   "p2_xv6.pdb"
   "p2_xv6"
 )

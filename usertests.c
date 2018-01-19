@@ -18,7 +18,6 @@ void
 iputtest(void)
 {
   printf(stdout, "iput test\n");
-
   if(mkdir("iputdir") < 0){
     printf(stdout, "mkdir failed\n");
     exit();

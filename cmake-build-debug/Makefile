@@ -1527,6 +1527,33 @@ uart.c.s:
 	$(MAKE) -f CMakeFiles/p2_xv6.dir/build.make CMakeFiles/p2_xv6.dir/uart.c.s
 .PHONY : uart.c.s
 
+uidgidtest.o: uidgidtest.c.o
+
+.PHONY : uidgidtest.o
+
+# target to build an object file
+uidgidtest.c.o:
+	$(MAKE) -f CMakeFiles/p2_xv6.dir/build.make CMakeFiles/p2_xv6.dir/uidgidtest.c.o
+.PHONY : uidgidtest.c.o
+
+uidgidtest.i: uidgidtest.c.i
+
+.PHONY : uidgidtest.i
+
+# target to preprocess a source file
+uidgidtest.c.i:
+	$(MAKE) -f CMakeFiles/p2_xv6.dir/build.make CMakeFiles/p2_xv6.dir/uidgidtest.c.i
+.PHONY : uidgidtest.c.i
+
+uidgidtest.s: uidgidtest.c.s
+
+.PHONY : uidgidtest.s
+
+# target to generate assembly for a file
+uidgidtest.c.s:
+	$(MAKE) -f CMakeFiles/p2_xv6.dir/build.make CMakeFiles/p2_xv6.dir/uidgidtest.c.s
+.PHONY : uidgidtest.c.s
+
 ulib.o: ulib.c.o
 
 .PHONY : ulib.o
@@ -1854,6 +1881,9 @@ help:
 	@echo "... uart.o"
 	@echo "... uart.i"
 	@echo "... uart.s"
+	@echo "... uidgidtest.o"
+	@echo "... uidgidtest.i"
+	@echo "... uidgidtest.s"
 	@echo "... ulib.o"
 	@echo "... ulib.i"
 	@echo "... ulib.s"
