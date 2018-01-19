@@ -71,6 +71,8 @@ found:
   p->context->eip = (uint)forkret;
 
   p->start_ticks = ticks;
+  p->cpu_ticks_in = 0;
+  p->cpu_ticks_total = 0;
   return p;
 }
 
@@ -314,6 +316,7 @@ scheduler(void)
       proc = p;
       switchuvm(p);
       p->state = RUNNING;
+      p->cpu_ticks_in = ticks;
       swtch(&cpu->scheduler, proc->context);
       switchkvm();
 
@@ -355,6 +358,7 @@ sched(void)
   if(readeflags()&FL_IF)
     panic("sched interruptible");
   intena = cpu->intena;
+  proc->cpu_ticks_total += (ticks - proc->cpu_ticks_in);   // Update total cpu time
   swtch(&proc->context, cpu->scheduler);
   cpu->intena = intena;
 }

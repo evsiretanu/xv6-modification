@@ -69,6 +69,8 @@ struct proc {
   uint start_ticks;            // Create time
   uint gid;                    // Group ID
   uint uid;                    // User ID
+  uint cpu_ticks_total;        // Total cpu time a process uses
+  uint cpu_ticks_in;           // Time when the process is transferred into running state
 };
 
 // Process memory is laid out contiguously, low addresses first:
