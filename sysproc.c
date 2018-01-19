@@ -134,13 +134,23 @@ sys_setgid(void) {
   return 0;
 }
 
-int
+uint
 sys_getuid(void) {
   return proc->uid;
 }
 
-int
+uint
 sys_getgid(void) {
   return proc->gid;
+}
+
+uint
+sys_getppid(void) {
+  if(proc->pid == 1) {
+    // This is true for the very first proc
+    // No need to check for parent
+    return 1;
+  }
+  return proc->parent->pid;
 }
 

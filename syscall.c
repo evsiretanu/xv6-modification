@@ -109,6 +109,7 @@ extern int sys_setuid(void);
 extern int sys_setgid(void);
 extern int sys_getuid(void);
 extern int sys_getgid(void);
+extern int sys_getppid(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -140,7 +141,7 @@ static int (*syscalls[])(void) = {
 [SYS_getuid]  sys_getuid,
 [SYS_setgid]  sys_setgid,
 [SYS_getgid]  sys_getgid,
-
+[SYS_getppid] sys_getppid,
 };
 
 

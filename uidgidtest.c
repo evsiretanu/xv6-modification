@@ -1,3 +1,4 @@
+#include <wchar.h>
 #include "types.h"
 #include "user.h"
 
@@ -38,6 +39,7 @@ void check_getuid(int lastuid) {
 }
 
 int main(int arg, char *argv[]) {
+  int parent_pid;
 
   printf(1, "current uid: %d\n", getuid());
   check_setuid(32767);
@@ -50,6 +52,29 @@ int main(int arg, char *argv[]) {
   check_getuid(100);
   check_setuid(33000);
   check_getuid(100);
+
+  parent_pid = getpid();
+  printf(1, "\ncurrent pid: %d\n", parent_pid);
+  printf(1, "forking to check for ppid functionality... \n");
+  int rc = fork();
+  if(rc < 0) {
+    // failed
+    printf(1, "fork failed.\n");
+  } else if (rc == 0) {
+    //child
+    printf(1, "child pid: %d\n", getpid());
+    printf(1, "get ppid (should be == to parent pid)...");
+    if(getppid() == parent_pid) {
+      printf(1, "ok\n");
+    } else {
+      printf(1, "failed. returned: %d\n", getppid());
+    }
+  } else {
+    // parent
+    wait();
+  }
+
+
   exit();
 
 }
