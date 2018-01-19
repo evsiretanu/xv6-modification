@@ -13,3 +13,5 @@
 // #define FSSIZE       1000  // size of file system in blocks
 #define FSSIZE       2000  // size of file system in blocks  // CS333 requires a larger FS.
 
+#define DEFUID       0    // default uid for a process
+

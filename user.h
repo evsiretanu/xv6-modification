@@ -1,3 +1,4 @@
+#define CS333_P1 1
 struct stat;
 struct rtcdate;
 
@@ -31,6 +32,11 @@ int halt(void);
 int date(struct rtcdate*);
 
 #endif
+
+int setuid(uint);
+int setgid(uint);
+int getuid(void);
+
 
 // ulib.c
 int stat(char*, struct stat*);

@@ -33,3 +33,6 @@ SYSCALL(halt)
 
 # Added calls - Evghenii
 SYSCALL(date)
+SYSCALL(setuid)
+SYSCALL(getuid)
+SYSCALL(setgid)

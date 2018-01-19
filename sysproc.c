@@ -108,3 +108,34 @@ sys_date(void) {
 
 #endif
 
+int
+sys_setuid(void) {
+  int uid;
+  if(argint(0, &uid) < 0)
+    return -1;
+
+  if(uid < 0 || uid > 32767)  // Check for uid validity
+    return -1;
+
+  proc->uid = (uint)uid;
+  return 0;
+}
+
+int
+sys_setgid(void) {
+  int gid;
+  if(argint(0, &gid) < 0)
+    return -1;
+
+  if(gid < 0 || gid > 32767)  // Check for gid validity
+    return -1;
+
+  proc->uid = (uint)gid;
+  return 0;
+}
+
+int
+sys_getuid(void) {
+  return proc->uid;
+}
+

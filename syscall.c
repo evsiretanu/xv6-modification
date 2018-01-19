@@ -105,6 +105,10 @@ extern int sys_halt(void);
 extern int sys_date(void);
 #endif
 
+extern int sys_setuid(void);
+extern int sys_setgid(void);
+extern int sys_getuid(void);
+
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
 [SYS_exit]    sys_exit,
@@ -131,6 +135,10 @@ static int (*syscalls[])(void) = {
 #ifdef CS333_P1
 [SYS_date]    sys_date,
 #endif
+[SYS_setuid]  sys_setuid,
+[SYS_getuid]  sys_getuid,
+[SYS_setgid]  sys_setgid,
+
 };
 
 
