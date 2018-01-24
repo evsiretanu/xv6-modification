@@ -142,7 +142,7 @@ getcmd(char *buf, int nbuf)
   return 0;
 }
 
-#define USE_BUILTINS 1
+
 #ifdef USE_BUILTINS
 // ***** processing for shell builtins begins here *****
 
@@ -179,7 +179,6 @@ setbuiltin(char *p)
     p += strlen("uid");
     while (strncmp(p, " ", 1) == 0) p++; // chomp spaces
     i = makeint(p); // ugly
-    printf(1, "s");
     return (setuid(i));
   } else 
   if (strncmp("gid", p, 3) == 0) {
@@ -259,7 +258,7 @@ main(void)
         printf(2, "cannot cd %s\n", buf+3);
       continue;
     }
-#ifdef USE_BUILTINS_NOT_YET
+#ifdef USE_BUILTINS
     if (buf[0]=='_') {     // assume it is a builtin command
       dobuiltin(buf);
       continue;
