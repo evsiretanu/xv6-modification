@@ -1,4 +1,3 @@
-#define CS333_P1 1
 struct stat;
 struct rtcdate;
 struct uproc;
@@ -29,11 +28,10 @@ int halt(void);
 
 // Added prototypes - Evghenii
 #ifdef CS333_P1
-
 int date(struct rtcdate*);
-
 #endif
 
+#ifdef CS333_P2
 int setuid(uint);
 int setgid(uint);
 
@@ -41,7 +39,7 @@ uint getuid(void);
 uint getgid(void);
 uint getppid(void);
 int getprocs(uint max, struct uproc*);
-
+#endif
 
 // ulib.c
 int stat(char*, struct stat*);

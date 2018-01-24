@@ -6,7 +6,10 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+
+#ifdef CS333_P2
 #include "uproc.h"
+#endif
 
 int
 sys_fork(void)
@@ -109,6 +112,7 @@ sys_date(void) {
 
 #endif
 
+#ifdef CS333_P2
 int
 sys_setuid(void) {
   int uid;
@@ -168,4 +172,5 @@ sys_getprocs() {
 
   return getuprocs(max, procs);
 }
+#endif
 

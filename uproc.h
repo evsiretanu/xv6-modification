@@ -1,3 +1,5 @@
+#ifdef CS333_P2
+
 #include "types.h"
 #define STRMAX 32
 
@@ -12,3 +14,5 @@ struct uproc {
   char state[STRMAX];
   char name[STRMAX];
 };
+
+#endif

@@ -1,4 +1,3 @@
-#define CS333_P2 1
 #ifdef CS333_P2
 #include "types.h"
 #include "user.h"
