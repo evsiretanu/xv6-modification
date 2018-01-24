@@ -142,6 +142,7 @@ getcmd(char *buf, int nbuf)
   return 0;
 }
 
+#define USE_BUILTINS 1
 #ifdef USE_BUILTINS
 // ***** processing for shell builtins begins here *****
 
@@ -178,6 +179,7 @@ setbuiltin(char *p)
     p += strlen("uid");
     while (strncmp(p, " ", 1) == 0) p++; // chomp spaces
     i = makeint(p); // ugly
+    printf(1, "s");
     return (setuid(i));
   } else 
   if (strncmp("gid", p, 3) == 0) {
