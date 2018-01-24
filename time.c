@@ -28,6 +28,8 @@ main(int argc, char* argv[])
     } else if (rc == 0) {
       // Child process
       exec(args[0], args);
+      printf(2, "Error: failed to execute %s\n", args[0]);  // Will happen only if exec fails
+      exit();
     } else {
       // Parent process
       wait();

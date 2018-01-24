@@ -142,6 +142,7 @@ getcmd(char *buf, int nbuf)
   return 0;
 }
 
+#define USE_BUILTINS_NOT_YET 1
 #ifdef USE_BUILTINS_NOT_YET
 // ***** processing for shell builtins begins here *****
 

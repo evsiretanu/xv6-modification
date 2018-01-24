@@ -536,8 +536,9 @@ procdump(void)
     cprintf("%d\t%s\t%s", p->pid, state, p->name);
 
     #ifdef CS333_P1
+    // FIX THIS
     elapsed = (ticks - p->start_ticks);
-    cprintf("\t%d.%d%d%d", (elapsed/1000), (elapsed/100)%10, (elapsed/10)%10, (elapsed%10));
+    cprintf("\t%d.%d%d%d %d", (elapsed/1000), (elapsed/100)%10, (elapsed/10)%10, (elapsed%10), p->cpu_ticks_total);
     #endif
 
     if(p->state == SLEEPING){
@@ -568,7 +569,7 @@ getuprocs(int max, struct uproc *procs) {
         procs->ppid = 1;
       else
         procs->ppid = p->parent->pid;
-      procs->elapsed_ticks = ticks - p ->start_ticks;
+      procs->elapsed_ticks = ticks - p->start_ticks;
       procs->CPU_total_ticks = p->cpu_ticks_total;
       procs->size = p->sz;
       safestrcpy(procs->state, states[p->state], sizeof(procs->state));
