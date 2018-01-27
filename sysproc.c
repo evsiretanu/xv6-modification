@@ -7,6 +7,10 @@
 #include "mmu.h"
 #include "proc.h"
 
+#ifdef CS333_P2
+#include "uproc.h"
+#endif
+
 int
 sys_fork(void)
 {
@@ -106,5 +110,67 @@ sys_date(void) {
   return 0;
 }
 
+#endif
+
+#ifdef CS333_P2
+int
+sys_setuid(void) {
+  int uid;
+  if(argint(0, &uid) < 0)
+    return -1;
+
+  if(uid < 0 || uid > 32767)  // Check for uid validity
+    return -1;
+
+  proc->uid = (uint)uid;
+  return 0;
+}
+
+int
+sys_setgid(void) {
+  int gid;
+  if(argint(0, &gid) < 0)
+    return -1;
+
+  if(gid < 0 || gid > 32767)  // Check for gid validity
+    return -1;
+
+  proc->gid = (uint)gid;
+  return 0;
+}
+
+uint
+sys_getuid(void) {
+  return proc->uid;
+}
+
+uint
+sys_getgid(void) {
+  return proc->gid;
+}
+
+uint
+sys_getppid(void) {
+  if(proc->pid == 1) {
+    // This is true for the very first proc
+    // No need to check for parent
+    return 1;
+  }
+  return proc->parent->pid;
+}
+
+int
+sys_getprocs() {
+  int max;
+  struct uproc *procs;
+
+  if(argint(0, &max) < 0)
+    return -1;
+
+  if(argptr(1, (void*)&procs, sizeof(struct uproc)) < 0)
+    return -1;
+
+  return getuprocs(max, procs);
+}
 #endif
 

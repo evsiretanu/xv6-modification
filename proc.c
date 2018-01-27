@@ -7,6 +7,10 @@
 #include "proc.h"
 #include "spinlock.h"
 
+#ifdef CS333_P2
+#include "uproc.h"
+#endif
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -71,6 +75,11 @@ found:
   p->context->eip = (uint)forkret;
 
   p->start_ticks = ticks;
+
+  #ifdef CS333_P2
+  p->cpu_ticks_in = 0;
+  p->cpu_ticks_total = 0;
+  #endif
   return p;
 }
 
@@ -96,6 +105,12 @@ userinit(void)
   p->tf->eflags = FL_IF;
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
+
+  #ifdef CS333_P2
+  // Set the uid and gid to default
+  p->uid = DEFUID;
+  p->gid = DEFGID;
+  #endif
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
@@ -158,6 +173,12 @@ fork(void)
   safestrcpy(np->name, proc->name, sizeof(proc->name));
  
   pid = np->pid;
+
+  #ifdef CS333_P2
+  // Copy the uid and the gid of the parent
+  np->uid = proc->uid;
+  np->gid = proc->gid;
+  #endif
 
   // lock to force the compiler to emit the np->state write last.
   acquire(&ptable.lock);
@@ -306,6 +327,11 @@ scheduler(void)
       proc = p;
       switchuvm(p);
       p->state = RUNNING;
+
+      #ifdef CS333_P2
+      p->cpu_ticks_in = ticks;
+      #endif
+
       swtch(&cpu->scheduler, proc->context);
       switchkvm();
 
@@ -347,6 +373,11 @@ sched(void)
   if(readeflags()&FL_IF)
     panic("sched interruptible");
   intena = cpu->intena;
+
+  #ifdef CS333_P2
+  proc->cpu_ticks_total += (ticks - proc->cpu_ticks_in);   // Update total cpu time
+  #endif
+
   swtch(&proc->context, cpu->scheduler);
   cpu->intena = intena;
 }
@@ -507,11 +538,18 @@ procdump(void)
   struct proc *p;
   char *state;
   uint pc[10];
-  
+
   #ifdef CS333_P1
-  int elapsed;
-  cprintf("\nPID\tState\tName\tElapsed\t PCs\n");
+  int elaps, elaps_1, elaps_10, elaps_100, elaps_1000;
+
+  #ifdef CS333_P2
+    int ppid, cputick_1, cputick_10;
+    cprintf("\nPID\tName\tUID\tGID\tPPID\tElapsed\tCPU\tState\tSize\t PCs\n");    // P2
+  #else
+    cprintf("\nPID\tState\tName\tElapsed\t PCs\n");                              // P1
   #endif
+  #endif
+
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->state == UNUSED)
@@ -520,11 +558,35 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    cprintf("%d\t%s\t%s", p->pid, state, p->name);
+
+    #if(!defined CS333_P2)
+    cprintf("%d\t%s\t%s", p->pid, state, p->name);     // Print this for P0 and P1
+    #endif
 
     #ifdef CS333_P1
-    elapsed = (ticks - p->start_ticks);
-    cprintf("\t%d.%d%d%d", (elapsed/1000), (elapsed/100)%10, (elapsed/10)%10, (elapsed%10));
+      elaps       = (ticks - p->start_ticks);
+      elaps_1     = elaps/1000;     // Seconds
+      elaps_10    = (elaps/100)%10; // 10th of a second
+      elaps_100   = (elaps/10)%10;  // 100th of a second
+      elaps_1000  = (elaps%10);     // 1000th of a second
+
+    #ifdef CS333_P2
+      cputick_1   = p->cpu_ticks_total/1000;       // CPU time in seconds
+      cputick_10  = (p->cpu_ticks_total/100)%10;  // CPU time in 10th of a second
+
+      // Get parent pid
+      if(p->pid == 1)
+        ppid = 1;
+      else
+        ppid = p->parent->pid;
+
+      // P2
+      cprintf("%d\t%s\t%d\t%d\t%d\t%d.%d%d%d\t%d.%d\t%s\t%d", p->pid, p->name, p->uid, p->gid, ppid,
+              elaps_1, elaps_10, elaps_100, elaps_1000, cputick_1, cputick_10, state, p->sz);
+    #else
+      // P1
+      cprintf("\t%d.%d%d%d", elaps_1, elaps_10, elaps_100, elaps_1000);
+    #endif
     #endif
 
     if(p->state == SLEEPING){
@@ -536,3 +598,36 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+#ifdef CS333_P2
+int
+getuprocs(int max, struct uproc *procs) {
+  int size = 0;
+  struct proc *p;
+
+  if(max < 0)
+    return -1;
+
+  acquire(&ptable.lock);  // Lock ptable so nothing else uses it
+  for(p = ptable.proc; p < &ptable.proc[NPROC] && size < max; p++){
+    if(p->state != EMBRYO && p->state != UNUSED) {
+      procs->pid = p->pid;
+      procs->uid = p->uid;
+      procs->gid = p->gid;
+      if(p->pid == 1)
+        procs->ppid = 1;
+      else
+        procs->ppid = p->parent->pid;
+      procs->elapsed_ticks = ticks - p->start_ticks;
+      procs->CPU_total_ticks = p->cpu_ticks_total;
+      procs->size = p->sz;
+      safestrcpy(procs->state, states[p->state], sizeof(procs->state));
+      safestrcpy(procs->name, p->name, sizeof(procs->name));
+      size++;
+      procs++;
+    }
+  }
+  release(&ptable.lock);
+  return size;
+}
+#endif

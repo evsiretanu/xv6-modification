@@ -7,6 +7,7 @@
 #include "syscall.h"
 #include "traps.h"
 #include "memlayout.h"
+#include "uproc.h"
 
 char buf[8192];
 char name[3];
@@ -18,7 +19,6 @@ void
 iputtest(void)
 {
   printf(stdout, "iput test\n");
-
   if(mkdir("iputdir") < 0){
     printf(stdout, "mkdir failed\n");
     exit();
@@ -1703,6 +1703,124 @@ rand()
   return randstate;
 }
 
+#ifdef CS333_P2
+void check_setuid(int uid) {
+  int ret;
+  int minbound = 0;
+  int maxbound = 32767;
+
+  //Check if setuid returns a success code
+  printf(1, "setuid to %d...  ", uid);
+  ret = setuid(uid);
+  // Check if the given uid should be set
+  if (uid >= minbound && uid <= maxbound) {
+    if (ret < 0){
+      printf(1, "failed!\n");
+      exit();
+    } else
+      printf(1, "OK\n");
+  } else {
+    // Check if the given uid should not be set
+    if(ret == 0) {
+      printf(1, "failed!\n");
+      exit();
+    } else if (ret < 0)
+      printf(1, "OK\n");
+  }
+}
+
+void check_getuid(int lastuid) {
+  int ret;
+
+  // Check if getuid() returns the uid that was set
+  printf(1, "getuid (expected %d)-> ", lastuid);
+  ret = getuid();
+  printf(1, "%d... ", ret);
+  if(ret != lastuid) {
+    printf(1, "failed!\n");
+    exit();
+  } else
+    printf(1, "OK\n");
+}
+
+void check_setgid(int gid) {
+  int ret;
+  int minbound = 0;
+  int maxbound = 32767;
+
+  //Check if setgid returns a success code
+  printf(1, "setgid to %d...  ", gid);
+  ret = setgid(gid);
+  // Check if the given gid should be set
+  if (gid >= minbound && gid <= maxbound) {
+    if (ret < 0){
+      printf(1, "failed!\n");
+      exit();
+    } else
+      printf(1, "OK\n");
+  } else {
+    // Check if the given gid should not be set
+    if(ret == 0) {
+      printf(1, "failed!\n");
+      exit();
+    } else if (ret < 0)
+      printf(1, "OK\n");
+  }
+}
+
+void check_getgid(int lastgid) {
+  int ret;
+
+  // Check if getgid() returns the gid that was set
+  printf(1, "getgid (expected %d)-> ", lastgid);
+  ret = getgid();
+  printf(1, "%d... ", ret);
+  if(ret != lastgid) {
+    printf(1, "failed! \n");
+    exit();
+  } else
+    printf(1, "OK\n");
+}
+
+void check_pguid() {
+  int parent_pid, parent_uid, parent_gid, ret;
+
+  parent_pid = getpid();
+  parent_uid = getuid();
+  parent_gid = getgid();
+  printf(1, "\ncurrent pid: %d\n", parent_pid);
+  printf(1, "current uid: %d\n", parent_uid);
+  printf(1, "current gid: %d\n", parent_gid);
+  printf(1, "forking to check for ppid, uid, gid functionality... \n");
+  int rc = fork();
+  if(rc < 0) {
+    // failed
+    printf(1, "fork failed!\n");
+    exit();
+  } else if (rc == 0) {
+    //child
+    printf(1, "[child] child pid: %d\n", getpid());
+    printf(1, "[child] getppid (expected %d)->", parent_pid);
+    ret = getppid();
+    printf(1, "%d... ", ret);
+    if(ret == parent_pid) {
+      printf(1, "OK\n");
+    } else {
+      printf(1, "failed!\n");
+    }
+    printf(1, "[child] getuid... ");
+    check_getuid(parent_uid);
+    printf(1, "[child] getgid... ");
+    check_getgid(parent_gid);
+    exit();   // Exit the child, since it's not needed anymore
+  } else {
+    // parent
+    wait();
+  }
+}
+
+#endif
+
 int
 main(int argc, char *argv[])
 {
@@ -1751,6 +1869,33 @@ main(int argc, char *argv[])
   iref();
   forktest();
   bigdir(); // slow
+
+  // Added tests
+  #ifdef CS333_P2
+  printf(1, "uid/gid/pid tests\n");
+  printf(1, "current uid: %d\n", getuid());
+  check_setuid(32767);
+  check_getuid(32767);
+  check_setuid(0);
+  check_getuid(0);
+  check_setuid(100);
+  check_getuid(100);
+  check_setuid(-1);
+  check_getuid(100);
+  check_setuid(33000);
+  check_getuid(100);
+  check_setgid(32767);
+  check_getgid(32767);
+  check_setgid(0);
+  check_getgid(0);
+  check_setgid(100);
+  check_getgid(100);
+  check_setgid(-1);
+  check_getgid(100);
+  check_setgid(33000);
+  check_getgid(100);
+  check_pguid();
+  #endif
   exectest();
 
   exit();

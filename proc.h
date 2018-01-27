@@ -67,6 +67,13 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
   uint start_ticks;            // Create time
+
+  #ifdef CS333_P2
+  uint gid;                    // Group ID
+  uint uid;                    // User ID
+  uint cpu_ticks_total;        // Total cpu time a process uses
+  uint cpu_ticks_in;           // Time when the process is transferred into running state
+  #endif
 };
 
 // Process memory is laid out contiguously, low addresses first:
