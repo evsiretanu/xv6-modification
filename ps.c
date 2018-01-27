@@ -2,7 +2,6 @@
 #include "types.h"
 #include "user.h"
 #include "uproc.h"
-
 int
 main(void)
 {
@@ -28,6 +27,7 @@ main(void)
     cp++;
   }
 
+  free(procs);
   exit();
 }
 #endif

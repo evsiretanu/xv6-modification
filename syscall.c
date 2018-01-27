@@ -184,7 +184,7 @@ static char *syscallnames[] = {
 [SYS_setuid]  "setuid",
 [SYS_getuid]  "getuid",
 [SYS_setgid]  "setgid",
-[SYS_getgid]  "setgid",
+[SYS_getgid]  "getgid",
 [SYS_getppid] "getppid",
 [SYS_getprocs] "getprocs",
 #endif
