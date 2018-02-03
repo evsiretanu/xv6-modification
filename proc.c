@@ -266,7 +266,7 @@ fork(void)
 int
 fork(void)
 {
-  cprintf("FORK=>");
+  //cprintf("FORK=>");
   int i, pid;
   struct proc *np;
 
@@ -371,9 +371,13 @@ exit(void)
 void
 exit(void)
 {
-  cprintf("EXIT=>");
-  struct proc *p;
+  //cprintf("EXIT=>");
+  // Free and embryo states don't need to be considered
+  struct proc *stateLists[] = {ptable.pLists.sleep, ptable.pLists.ready,
+                               ptable.pLists.running, ptable.pLists.zombie};
+  struct proc *p, **sl;
   int fd;
+  int slsize = sizeof(stateLists)/ sizeof(stateLists[0]);
 
   if(proc == initproc)
     panic("init exiting");
@@ -396,14 +400,19 @@ exit(void)
   // Parent might be sleeping in wait().
   wakeup1(proc->parent);
 
-  // Pass abandoned children to init.
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->parent == proc){
-      p->parent = initproc;
-      if(p->state == ZOMBIE)
-        wakeup1(initproc);
+  // Iterate over state lists and their members
+  for (sl = stateLists; sl < &stateLists[slsize]; sl++) {
+    p = *sl;  //p = head of a state list
+    while(p) {
+      if(p->parent == proc) {
+        p->parent = initproc;
+        if(p->state == ZOMBIE)
+          wakeup1(initproc);
+      }
+      p = p->next;
     }
   }
+
 
   if(!removeFromStateList(&ptable.pLists.running, proc, RUNNING)) {
     panic("[exit] Failed to remove proc from 'RUNNING' list.\n");
@@ -418,11 +427,11 @@ exit(void)
 
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
-#ifdef CS333_P4
+#ifndef CS333_P4
 int
 wait(void)
 {
-  cprintf("WAIT=>");
+  //cprintf("WAIT=>");
   struct proc *p;
   int havekids, pid;
 
@@ -464,31 +473,41 @@ wait(void)
 int
 wait(void)
 {
-  cprintf("WAIT=>");
-  struct proc *p;
+  //cprintf("WAIT=>");
+  struct proc *stateLists[] = {ptable.pLists.sleep, ptable.pLists.ready,
+                               ptable.pLists.running, ptable.pLists.zombie};
+  struct proc *p, **sl;
+  int slsize = sizeof(stateLists)/ sizeof(stateLists[0]);
   int havekids, pid;
 
   acquire(&ptable.lock);
   for(;;) {
     havekids = 0;
-    p = ptable.pLists.zombie;
-    while(p) {
-      if(p->parent == proc) {
-        havekids = 1;
-        pid = p->pid;
-        kfree(p->kstack);
-        p->kstack = 0;
-        freevm(p->pgdir);
-        p->pid = 0;
-        p->parent = 0;
-        p->name[0] = 0;
-        p->killed = 0;
-        if(!removeFromStateList(&ptable.pLists.zombie, proc, ZOMBIE)) {
-          panic("[wait] Failed to remove proc from 'ZOMBIE' list.\n");
+    for(sl = stateLists; sl < &stateLists[slsize]; sl++) {
+      p = *sl;  //p = head of a state list
+      while(p) {
+        if(p->parent == proc) {
+          havekids = 1;
+          if (p->state == ZOMBIE) {
+            // Found one.
+            pid = p->pid;
+            kfree(p->kstack);
+            p->kstack = 0;
+            freevm(p->pgdir);
+            p->pid = 0;
+            p->parent = 0;
+            p->name[0] = 0;
+            p->killed = 0;
+            if (!removeFromStateList(&ptable.pLists.zombie, p, ZOMBIE)) {
+              panic("[wait] Failed to remove proc from 'ZOMBIE' list.\n");
+            }
+            release(&ptable.lock);
+            p->state = UNUSED;
+            addToStateListHead(&ptable.pLists.free, p);
+            return pid;
+          }
         }
-        p->state = UNUSED;
-        addToStateListHead(&ptable.pLists.free, p);
-        return pid;
+        p = p->next;
       }
     }
 
@@ -634,7 +653,7 @@ sched(void)
 {
   int intena;
   //panic("NO=>");
-  cprintf("SCHED=>");
+  //cprintf("SCHED=>");
   if(!holding(&ptable.lock))
     panic("sched ptable.lock");
   if(cpu->ncli != 1)
@@ -676,7 +695,7 @@ yield(void)
   }
   proc->state = RUNNABLE;
   addToStateListEnd(&ptable.pLists.ready, proc);
-  cprintf("YIELD=>");
+  //cprintf("YIELD=>");
   //panic("YIELD");
   sched();
   release(&ptable.lock);
@@ -770,7 +789,7 @@ sleep(void *chan, struct spinlock *lk)
   }
   proc->state = SLEEPING;
   addToStateListHead(&ptable.pLists.sleep, proc);
-  cprintf("SLEEP=>");
+  //cprintf("SLEEP=>");
   //panic("SLEEP");
   sched();
 
@@ -969,6 +988,69 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+#ifdef CS333_P4
+void
+printdump(struct proc* list) {
+  struct proc *p = list;
+
+  if(!p) {
+    cprintf("There are no processes in the list.\n");
+    return;
+  }
+  while(p->next) {
+    cprintf("%d -> ", p->pid);
+    p = p->next;
+  }
+  cprintf("%d\n", p->pid);
+}
+
+void
+dumpsleep(void) {
+  cprintf("Sleep List Processes:\n");
+  printdump(ptable.pLists.sleep);
+}
+
+void
+dumpready(void) {
+  cprintf("Ready List Processes:\n");
+  printdump(ptable.pLists.ready);
+}
+
+void
+dumpzombie(void) {
+  struct proc *p = ptable.pLists.zombie;
+  int ppid = 1;
+
+  cprintf("Zombie List Processes:\n");
+  if(!p) {
+    cprintf("There are no processes in the list.\n");
+    return;
+  }
+  while(p) {
+    if(p->pid != 1) {
+      ppid = p->parent->pid;  // Get PPID of proc is not init
+    }
+    cprintf("(%d,%d)", p->pid, ppid);
+    if(p->next) {
+      cprintf(" -> ");
+    }
+    p = p->next;
+  }
+}
+
+void dumpfree(void) {
+  struct proc *p = ptable.pLists.free;
+  int free = 0;
+
+  while(p) {
+    free++;
+    p = p->next;
+  }
+  cprintf("Free List Size: %d Processes", free);
+}
+
+#endif
 
 #ifdef CS333_P2
 int
