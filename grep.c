@@ -1,3 +1,4 @@
+#include "RMME.h"
 // Simple grep.  Only supports ^ . * $ operators.
 
 #include "types.h"

@@ -1,3 +1,4 @@
+#include "RMME.h"
 #include "types.h"
 #include "defs.h"
 #include "param.h"
@@ -11,9 +12,27 @@
 #include "uproc.h"
 #endif
 
+#ifdef CS333_P4
+
+struct StateLists {
+  struct proc* ready;
+  struct proc* free;
+  struct proc* sleep;
+  struct proc* zombie;
+  struct proc* running;
+  struct proc* embryo;
+};
+
+#endif
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
+
+#ifdef CS333_P4
+  struct StateLists pLists;
+#endif
+
 } ptable;
 
 static struct proc *initproc;
@@ -21,8 +40,14 @@ static struct proc *initproc;
 int nextpid = 1;
 extern void forkret(void);
 extern void trapret(void);
-
 static void wakeup1(void *chan);
+
+#ifdef CS333_P4
+static struct proc* popStateList(struct proc**, enum procstate);
+static void pushStateList(struct proc**, struct proc*);
+static int removeFromStateList(struct proc**, struct proc*);
+static int stateEqual(struct proc*, enum procstate);
+#endif
 
 void
 pinit(void)
@@ -41,16 +66,28 @@ allocproc(void)
   struct proc *p;
   char *sp;
 
+  //p = popStateList(&ptable.pLists.free, UNUSED);
   acquire(&ptable.lock);
+
+  #ifndef CS333_P4
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == UNUSED)
       goto found;
+  #else
+  if((p = popStateList(&ptable.pLists.free, UNUSED)) != 0)
+    goto found;
+  #endif
   release(&ptable.lock);
   return 0;
 
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  struct proc *p2 = popStateList(&ptable.pLists.free, UNUSED);
+  pushStateList(&ptable.pLists.embryo, p);
+  removeFromStateList(&ptable.pLists.embryo, p);
+  pushStateList(&ptable.pLists.embryo, p2);
+  removeFromStateList(&ptable.pLists.embryo, p2);
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -90,7 +127,26 @@ userinit(void)
 {
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
-  
+
+  #ifdef CS333_P4
+  acquire(&ptable.lock);
+  ptable.pLists.ready   = 0;
+  ptable.pLists.free    = 0;
+  ptable.pLists.sleep   = 0;
+  ptable.pLists.zombie  = 0;
+  ptable.pLists.running = 0;
+  ptable.pLists.embryo  = 0;
+
+  // Initialize the next pointers in proc array
+  for (int i = 0; i < NPROC - 1; i++) {
+    ptable.proc[i].next = &ptable.proc[i+1];
+  }
+  ptable.proc[NPROC].next = 0;
+
+  ptable.pLists.free = ptable.proc;   // Make free list be the head of proc list
+  release(&ptable.lock);
+  #endif
+
   p = allocproc();
   initproc = p;
   if((p->pgdir = setupkvm()) == 0)
@@ -116,6 +172,7 @@ userinit(void)
   p->cwd = namei("/");
 
   p->state = RUNNABLE;
+  ptable.pLists.ready = p;
 }
 
 // Grow current process's memory by n bytes.
@@ -630,4 +687,70 @@ getuprocs(int max, struct uproc *procs) {
   release(&ptable.lock);
   return size;
 }
+#endif
+
+#ifdef CS333_P4
+
+static struct proc*
+popStateList(struct proc** list, enum procstate state) {
+  if(*list == 0)
+    return 0;
+  if(!stateEqual(*list, state)) {
+    cprintf("Attempted to remove %s proc from a state list. Actual state: %s.", states[state], states[(*list)->state]);
+    panic("State list error");
+  }
+
+  struct proc* p = *list;
+  *list= (*list)->next;
+  p->next = 0;
+  return p;
+}
+
+static void
+pushStateList(struct proc** list, struct proc* proc) {
+  struct proc* curr = *list;
+  if(*list == 0) {
+    *list = proc;
+  }
+  else {
+    while(curr->next)
+      curr = curr->next;
+    curr->next = proc;
+  }
+}
+
+static int
+removeFromStateList(struct proc** list, struct proc* proc) {
+  struct proc *prev, *curr;
+  if(*list){
+    prev = *list;
+    curr = *list;
+    while(curr != proc && curr->next) {
+      prev = curr;
+      curr = curr->next;
+    }
+    if(curr == proc) {
+      if(curr == *list) {
+        *list = (*list)->next;
+      }
+      else {
+        prev->next = curr->next;
+      }
+      curr->next = 0;
+      return 1;
+    }
+  }
+  return 0;
+}
+
+
+static int
+stateEqual(struct proc* proc, enum procstate state) {
+  if(proc){
+    if(proc->state == state)
+      return 1;
+  }
+  return 0;
+}
+
 #endif
