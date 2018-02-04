@@ -363,7 +363,7 @@ exit(void)
 
   // Jump into the scheduler, never to return.
   proc->state = ZOMBIE;
-  panic("EXIT=>");
+  //panic("EXIT=>");
   sched();
   panic("zombie exit");
 }
@@ -372,12 +372,9 @@ void
 exit(void)
 {
   //cprintf("EXIT=>");
-  // Free and embryo states don't need to be considered
-  struct proc *stateLists[] = {ptable.pLists.sleep, ptable.pLists.ready,
-                               ptable.pLists.running, ptable.pLists.zombie};
   struct proc *p, **sl;
   int fd;
-  int slsize = sizeof(stateLists)/ sizeof(stateLists[0]);
+  int slsize;
 
   if(proc == initproc)
     panic("init exiting");
@@ -396,10 +393,15 @@ exit(void)
   proc->cwd = 0;
 
   acquire(&ptable.lock);
+  // Free and embryo states don't need to be considered
+  struct proc *stateLists[] = {ptable.pLists.sleep, ptable.pLists.ready,
+                               ptable.pLists.running, ptable.pLists.zombie};
+  slsize = sizeof(stateLists)/ sizeof(stateLists[0]);
 
   // Parent might be sleeping in wait().
   wakeup1(proc->parent);
 
+  // Pass abandoned children to init.
   // Iterate over state lists and their members
   for (sl = stateLists; sl < &stateLists[slsize]; sl++) {
     p = *sl;  //p = head of a state list
@@ -407,6 +409,7 @@ exit(void)
       if(p->parent == proc) {
         p->parent = initproc;
         if(p->state == ZOMBIE)
+          cprintf("ZZZZZ: %d\n", p->pid);
           wakeup1(initproc);
       }
       p = p->next;
@@ -421,6 +424,7 @@ exit(void)
   // Jump into the scheduler, never to return.
   sched();
   panic("zombie exit");
+
 }
 #endif
 
@@ -472,20 +476,20 @@ wait(void)
 int
 wait(void)
 {
-  //cprintf("WAIT=>");
-  struct proc *stateLists[] = {ptable.pLists.sleep, ptable.pLists.ready,
-                               ptable.pLists.running, ptable.pLists.zombie};
-  struct proc *p, **sl;
+  struct proc **stateLists[] = {&ptable.pLists.sleep, &ptable.pLists.ready,
+                               &ptable.pLists.running, &ptable.pLists.zombie};
+  struct proc *p;
   int slsize = sizeof(stateLists)/ sizeof(stateLists[0]);
   int havekids, pid;
 
   acquire(&ptable.lock);
   for(;;) {
     havekids = 0;
-    for(sl = stateLists; sl < &stateLists[slsize]; sl++) {
-      p = *sl;  //p = head of a state list
+
+    for(int i = 0; i < slsize; i++) {
+      p = *stateLists[i];  //p = head of a state list
       while(p) {
-        if(p->parent == proc) {
+        if (p->parent == proc) {
           havekids = 1;
           if (p->state == ZOMBIE) {
             // Found one.
@@ -495,20 +499,23 @@ wait(void)
             freevm(p->pgdir);
             p->pid = 0;
             p->parent = 0;
+            //cprintf("REMOVED ZOMBIE: %s\n", p->name);
             p->name[0] = 0;
             p->killed = 0;
             if (!removeFromStateList(&ptable.pLists.zombie, p, ZOMBIE)) {
               panic("[wait] Failed to remove proc from 'ZOMBIE' list.\n");
             }
-            release(&ptable.lock);
+
             p->state = UNUSED;
             addToStateListHead(&ptable.pLists.free, p);
+            release(&ptable.lock);
             return pid;
           }
         }
         p = p->next;
       }
     }
+
 
     // No point waiting if we don't have any children.
     if(!havekids || proc->killed){
@@ -519,7 +526,6 @@ wait(void)
     // Wait for children to exit.  (See wakeup1 call in proc_exit.)
     sleep(proc, &ptable.lock);  //DOC: wait-sleep
   }
-
 }
 #endif
 
@@ -874,12 +880,14 @@ kill(int pid)
     }
   }
   release(&ptable.lock);
-  return -1;
+  return -1;p->killed
 }
 #else
 int
 kill(int pid)
 {
+  //=========================== FIX THIS AQUIRE
+
   // List of state lists over which to look for the process
   struct proc *stateLists[] = {ptable.pLists.sleep, ptable.pLists.ready,
                                ptable.pLists.running, ptable.pLists.zombie};
@@ -1064,7 +1072,7 @@ dumpzombie(void) {
   struct proc *p = ptable.pLists.zombie;
   int ppid = 1;
 
-  cprintf("Zombie List Processes:\n");
+  cprintf("\nZombie List Processes:\n");
   if(!p) {
     cprintf("There are no processes in the list.\n");
     return;
@@ -1090,7 +1098,7 @@ void dumpfree(void) {
     free++;
     p = p->next;
   }
-  cprintf("Free List Size: %d Processes", free);
+  cprintf("Free List Size: %d Processes\n", free);
 }
 
 // Pop a process from the front of a given state list

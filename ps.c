@@ -6,6 +6,7 @@
 int
 main(void)
 {
+
   uint maxprocs = 32;
   struct uproc *procs = malloc(maxprocs * sizeof(struct uproc));
   struct uproc *cp; // Pointer to a current uproc
