@@ -149,7 +149,7 @@ userinit(void)
   for (int i = 0; i < NPROC - 1; i++) {
     ptable.proc[i].next = &ptable.proc[i+1];
   }
-  ptable.proc[NPROC].next = 0;
+  ptable.proc[NPROC].next = 0;        // Set last one -> next to NULL
 
   ptable.pLists.free = ptable.proc;   // Make free list be the head of proc list
   release(&ptable.lock);
@@ -394,6 +394,8 @@ exit(void)
 
   acquire(&ptable.lock);
   // Free and embryo states don't need to be considered
+              // ========================= FIXXX THIS
+
   struct proc *stateLists[] = {ptable.pLists.sleep, ptable.pLists.ready,
                                ptable.pLists.running, ptable.pLists.zombie};
   slsize = sizeof(stateLists)/ sizeof(stateLists[0]);
@@ -1115,7 +1117,7 @@ popStateList(struct proc** list, enum procstate state) {
 
   p = *list;
   *list = (*list)->next;
-  p->next = 0;
+  p->next = 0;  // Set p->next to NULL before returning so it doesn't point anywhere
   return p;
 }
 
@@ -1160,7 +1162,7 @@ removeFromStateList(struct proc** list, struct proc* proc, enum procstate state)
       else {
         prev->next = curr->next; // Removing proc from elsewhere
       }
-      curr->next = 0;
+      curr->next = 0;   // Set next to NULL before returning so it doesn't point anywhere
       return 1;
     }
   }
