@@ -89,6 +89,7 @@ found:
   // Allocate kernel stack.
   if((p->kstack = kalloc()) == 0){
     #ifdef CS333_P4
+    // Remove from embryo list if out of memory
     acquire(&ptable.lock);
     if(!removeFromStateList(&ptable.pLists.embryo, p, EMBRYO)){
       panic("[allocproc] Failed to remove proc from EMBRYO state list.\n");
@@ -149,7 +150,7 @@ userinit(void)
   for (int i = 0; i < NPROC - 1; i++) {
     ptable.proc[i].next = &ptable.proc[i+1];
   }
-  ptable.proc[NPROC].next = 0;        // Set last one -> next to NULL
+  ptable.proc[NPROC-1].next = 0;        // Set last one -> next to NULL
 
   ptable.pLists.free = ptable.proc;   // Make free list be the head of proc list
   release(&ptable.lock);
@@ -266,7 +267,6 @@ fork(void)
 int
 fork(void)
 {
-  //cprintf("FORK=>");
   int i, pid;
   struct proc *np;
 
@@ -279,6 +279,8 @@ fork(void)
     kfree(np->kstack);
     acquire(&ptable.lock);
     np->kstack = 0;
+
+    // Move proc back to unused if thre is not enough memory
     if(!removeFromStateList(&ptable.pLists.embryo, np, EMBRYO)) {
       panic("[fork] Failed to remove proc from 'EMBRYO' list.\n");
     }
@@ -303,7 +305,8 @@ fork(void)
 
   pid = np->pid;
 
-  // Copy the uid and the gid of the parent
+  // Copy the uid and the gid of the parent. CS333_P3P4 also includes
+  // CS333_P2 flag, so the check for this functionality is not needed.
   np->uid = proc->uid;
   np->gid = proc->gid;
 
@@ -371,10 +374,13 @@ exit(void)
 void
 exit(void)
 {
-  //cprintf("EXIT=>");
-  struct proc *p, **sl;
+  // Make an array of addresses for the state lists. This is used in order
+  // to not have duplicate code for iterating over each one individually.
+  struct proc **stateLists[] = {&ptable.pLists.sleep, &ptable.pLists.ready,
+                               &ptable.pLists.running, &ptable.pLists.zombie};
+  struct proc *p;
   int fd;
-  int slsize;
+  int slsize = sizeof(stateLists)/ sizeof(stateLists[0]);
 
   if(proc == initproc)
     panic("init exiting");
@@ -393,31 +399,25 @@ exit(void)
   proc->cwd = 0;
 
   acquire(&ptable.lock);
-  // Free and embryo states don't need to be considered
-              // ========================= FIXXX THIS
-
-  struct proc *stateLists[] = {ptable.pLists.sleep, ptable.pLists.ready,
-                               ptable.pLists.running, ptable.pLists.zombie};
-  slsize = sizeof(stateLists)/ sizeof(stateLists[0]);
 
   // Parent might be sleeping in wait().
   wakeup1(proc->parent);
 
   // Pass abandoned children to init.
   // Iterate over state lists and their members
-  for (sl = stateLists; sl < &stateLists[slsize]; sl++) {
-    p = *sl;  //p = head of a state list
+  for (int i = 0; i < slsize; i++) {
+    p = *stateLists[i];  //p = head of a state list
     while(p) {
       if(p->parent == proc) {
         p->parent = initproc;
         if(p->state == ZOMBIE)
-          cprintf("ZZZZZ: %d\n", p->pid);
           wakeup1(initproc);
       }
       p = p->next;
     }
   }
 
+  // Remove from proc from running list
   if(!removeFromStateList(&ptable.pLists.running, proc, RUNNING)) {
     panic("[exit] Failed to remove proc from 'RUNNING' list.\n");
   }
@@ -478,6 +478,8 @@ wait(void)
 int
 wait(void)
 {
+  // Make an array of addresses for the state lists. This is used in order
+  // to not have duplicate code for iterating over each one individually.
   struct proc **stateLists[] = {&ptable.pLists.sleep, &ptable.pLists.ready,
                                &ptable.pLists.running, &ptable.pLists.zombie};
   struct proc *p;
@@ -501,13 +503,13 @@ wait(void)
             freevm(p->pgdir);
             p->pid = 0;
             p->parent = 0;
-            //cprintf("REMOVED ZOMBIE: %s\n", p->name);
             p->name[0] = 0;
             p->killed = 0;
+
+            // Remove from zombie list
             if (!removeFromStateList(&ptable.pLists.zombie, p, ZOMBIE)) {
               panic("[wait] Failed to remove proc from 'ZOMBIE' list.\n");
             }
-
             p->state = UNUSED;
             addToStateListHead(&ptable.pLists.free, p);
             release(&ptable.lock);
@@ -659,8 +661,7 @@ void
 sched(void)
 {
   int intena;
-  //panic("NO=>");
-  //cprintf("SCHED=>");
+
   if(!holding(&ptable.lock))
     panic("sched ptable.lock");
   if(cpu->ncli != 1)
@@ -671,6 +672,7 @@ sched(void)
     panic("sched interruptible");
   intena = cpu->intena;
 
+  // P2 functionality. CS333_P3P4 includes P2. No conditional check needed.
   proc->cpu_ticks_total += (ticks - proc->cpu_ticks_in);   // Update total cpu time
   swtch(&proc->context, cpu->scheduler);
   cpu->intena = intena;
@@ -697,6 +699,8 @@ void
 yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
+
+  // Remove from running list
   if(!removeFromStateList(&ptable.pLists.running, proc, RUNNING)) {
     panic("[yield] Failed to remove proc from 'RUNNING' list.\n");
   }
@@ -827,21 +831,26 @@ wakeup1(void *chan)
 static void
 wakeup1(void *chan)
 {
+  // The lock was aquired in wakeup()
   struct proc* ps[NPROC];
   struct proc* p = ptable.pLists.sleep;
-  int i = -1;
+  int i = 0;
 
-  // Add sleeping procs to a temporary array ps
-  while(p && i <= NPROC - 1) {
+  // ---------------- FIX ------------------------------
+
+  // Add sleeping procs to a temporary array ps. Done in order to use
+  // the already written helpers for removal, instead of removing while
+  // walking the sleep list manually
+  while(p && i < NPROC) {
     if(p->chan == chan) {
-      i++;
       ps[i] = p;
+      i++;
     }
     p = p->next;
   }
 
   // Remove all procs which were added to ps array from sleeping list
-  for(int pi = 0; pi <= i; pi++) {
+  for(int pi = 0; pi < i; pi++) {
     p = ps[pi];
     if(!(removeFromStateList(&ptable.pLists.sleep, p, SLEEPING))) {
       panic("[wakeup1] Failed to remove proc from 'SLEEPING' list.\n");
@@ -888,18 +897,16 @@ kill(int pid)
 int
 kill(int pid)
 {
-  //=========================== FIX THIS AQUIRE
-
   // List of state lists over which to look for the process
-  struct proc *stateLists[] = {ptable.pLists.sleep, ptable.pLists.ready,
-                               ptable.pLists.running, ptable.pLists.zombie};
-  struct proc *p, **sl;
+  struct proc **stateLists[] = {&ptable.pLists.sleep, &ptable.pLists.ready,
+                               &ptable.pLists.running, &ptable.pLists.zombie};
+  struct proc *p;
   int slsize = sizeof(stateLists)/ sizeof(stateLists[0]);
 
   // Iterate over state lists and their members
   acquire(&ptable.lock);
-  for (sl = stateLists; sl < &stateLists[slsize]; sl++) {
-    p = *sl;  //p = head of a state list
+  for (int i = 0; i < slsize; i++) {
+    p = *stateLists[i];  //p = head of a state list
     while(p) {
       if(p->pid == pid) {
         p->killed = 1;
@@ -1039,6 +1046,8 @@ getuprocs(int max, struct uproc *procs) {
 #endif
 
 #ifdef CS333_P4
+
+// Used to print the given state list entirely
 void
 printdump(struct proc* list) {
   struct proc *p = list;
@@ -1057,31 +1066,38 @@ printdump(struct proc* list) {
 // Print the PIDs of sleeping processes
 void
 dumpsleep(void) {
+  acquire(&ptable.lock);
   cprintf("Sleep List Processes:\n");
   printdump(ptable.pLists.sleep);
+  release(&ptable.lock);
 }
 
 // Print the PIDs of runnable processes
 void
 dumpready(void) {
+  acquire(&ptable.lock);
   cprintf("Ready List Processes:\n");
   printdump(ptable.pLists.ready);
+  release(&ptable.lock);
 }
 
 // Print the PIDs of zombies and their parents
 void
 dumpzombie(void) {
-  struct proc *p = ptable.pLists.zombie;
+  struct proc *p;
   int ppid = 1;
 
+  acquire(&ptable.lock);
+  p = ptable.pLists.zombie;
   cprintf("\nZombie List Processes:\n");
   if(!p) {
     cprintf("There are no processes in the list.\n");
+    release(&ptable.lock);
     return;
   }
   while(p) {
     if(proc != initproc) {
-      ppid = p->parent->pid;  // Get PPID of proc is not init
+      ppid = p->parent->pid;  // Get PPID of proc if not init
     }
     cprintf("(%d,%d)", p->pid, ppid);
     if(p->next) {
@@ -1089,18 +1105,22 @@ dumpzombie(void) {
     }
     p = p->next;
   }
+  release(&ptable.lock);
 }
 
 // Print the count of unused processes
 void dumpfree(void) {
-  struct proc *p = ptable.pLists.free;
+  struct proc *p;
   int free = 0;
 
+  acquire(&ptable.lock);
+  p = ptable.pLists.free;
   while(p) {
     free++;
     p = p->next;
   }
   cprintf("Free List Size: %d Processes\n", free);
+  release(&ptable.lock);
 }
 
 // Pop a process from the front of a given state list
@@ -1179,5 +1199,6 @@ stateEqual(struct proc* proc, enum procstate state) {
   }
   return 0;
 }
+
 
 #endif

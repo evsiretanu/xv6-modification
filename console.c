@@ -213,9 +213,9 @@ consoleintr(int (*getc)(void))
     case C('Z'):
       dodumpzombie = 1;
       break;
-      case C('F'):
-        dodumpfree = 1;
-        break;
+    case C('F'):
+      dodumpfree = 1;
+      break;
     #endif
 
     case C('U'):  // Kill line.
