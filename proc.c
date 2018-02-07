@@ -49,7 +49,7 @@ static void addToStateListEnd(struct proc**, struct proc*);
 static int addToStateListHead(struct proc**, struct proc*, enum procstate);
 static void addToStateListHead2(struct proc**, struct proc*, enum procstate);
 
-static int removeFromStateList(struct proc**, struct proc*, enum procstate);
+static int removeFromStateList(struct proc**, struct proc*);
 static void removeFromStateList2(struct proc**, struct proc*, enum procstate);
 
 static int stateEqual(struct proc*, enum procstate);
@@ -90,9 +90,6 @@ found:
   p->pid = nextpid++;
 
   addToStateListHead2(&ptable.pLists.embryo, p, EMBRYO);
-  //if(!addToStateListHead(&ptable.pLists.embryo, p, EMBRYO))
-  //  panic("allocproc: Failed to add proc to EMBRYO state list.");
-
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -100,16 +97,9 @@ found:
     #ifdef CS333_P4
     // Remove from embryo list if out of memory
     acquire(&ptable.lock);
-
-    if(!removeFromStateList(&ptable.pLists.embryo, p, EMBRYO))
-      panic("allocproc: Failed to remove proc from EMBRYO state list.");
-
-    if(!stateEqual(p, EMBRYO))
-      panic("allocproc: Proc does not match EMBRYO state");
-
+    removeFromStateList2(&ptable.pLists.embryo, p, EMBRYO);
     p->state = UNUSED;
-    if(!addToStateListHead(&ptable.pLists.free, p, UNUSED))
-      panic("allocporc: Failed to add proc to EMBRYO state list.");
+    addToStateListHead2(&ptable.pLists.free, p, UNUSED);
 
     release(&ptable.lock);
     #else
@@ -196,11 +186,9 @@ userinit(void)
   p->cwd = namei("/");
 
   acquire(&ptable.lock);
-  if(!removeFromStateList(&ptable.pLists.embryo, p, EMBRYO)) {
-    panic("[userinit] Failed to remove init proc from EMBRYO state list.\n");
-  }
+  removeFromStateList2(&ptable.pLists.embryo, p, EMBRYO);
   p->state = RUNNABLE;
-  addToStateListHead(&ptable.pLists.ready, p, RUNNABLE);  // Ready list is empty before this
+  addToStateListHead2(&ptable.pLists.ready, p, RUNNABLE);  // Ready list is empty before this
   release(&ptable.lock);
 }
 
@@ -296,11 +284,9 @@ fork(void)
     np->kstack = 0;
 
     // Move proc back to unused if thre is not enough memory
-    if(!removeFromStateList(&ptable.pLists.embryo, np, EMBRYO)) {
-      panic("[fork] Failed to remove proc from 'EMBRYO' list.\n");
-    }
+    removeFromStateList2(&ptable.pLists.embryo, np, EMBRYO);
     np->state = UNUSED;
-    addToStateListHead(&ptable.pLists.free, np, UNUSED);
+    addToStateListHead2(&ptable.pLists.free, np, UNUSED);
     release(&ptable.lock);
     return -1;
   }
@@ -327,9 +313,7 @@ fork(void)
 
   // lock to force the compiler to emit the np->state write last.
   acquire(&ptable.lock);
-  if(!removeFromStateList(&ptable.pLists.embryo, np, EMBRYO)) {
-    panic("[fork] Failed to remove proc from 'EMBRYO' list.\n");
-  }
+  removeFromStateList2(&ptable.pLists.embryo, np, EMBRYO);
   np->state = RUNNABLE;
   addToStateListEnd(&ptable.pLists.ready, np);
   release(&ptable.lock);
@@ -432,12 +416,10 @@ exit(void)
     }
   }
 
-  // Remove from proc from running list
-  if(!removeFromStateList(&ptable.pLists.running, proc, RUNNING)) {
-    panic("[exit] Failed to remove proc from 'RUNNING' list.\n");
-  }
+  // Remove proc from running list
+  removeFromStateList2(&ptable.pLists.running, proc, RUNNING);
   proc->state = ZOMBIE;
-  addToStateListHead(&ptable.pLists.zombie, proc, ZOMBIE);
+  addToStateListHead2(&ptable.pLists.zombie, proc, ZOMBIE);
   // Jump into the scheduler, never to return.
   sched();
   panic("zombie exit");
@@ -522,11 +504,9 @@ wait(void)
             p->killed = 0;
 
             // Remove from zombie list
-            if (!removeFromStateList(&ptable.pLists.zombie, p, ZOMBIE)) {
-              panic("[wait] Failed to remove proc from 'ZOMBIE' list.\n");
-            }
+            removeFromStateList2(&ptable.pLists.zombie, p, ZOMBIE);
             p->state = UNUSED;
-            addToStateListHead(&ptable.pLists.free, p, UNUSED);
+            addToStateListHead2(&ptable.pLists.free, p, UNUSED);
             release(&ptable.lock);
             return pid;
           }
@@ -626,7 +606,7 @@ scheduler(void)
       switchuvm(p);
       p->state = RUNNING;
       p->cpu_ticks_in = ticks;
-      addToStateListHead(&ptable.pLists.running, p, RUNNING);
+      addToStateListHead2(&ptable.pLists.running, p, RUNNING);
 
       swtch(&cpu->scheduler, proc->context);
       switchkvm();
@@ -716,9 +696,7 @@ yield(void)
   acquire(&ptable.lock);  //DOC: yieldlock
 
   // Remove from running list
-  if(!removeFromStateList(&ptable.pLists.running, proc, RUNNING)) {
-    panic("[yield] Failed to remove proc from 'RUNNING' list.\n");
-  }
+  removeFromStateList2(&ptable.pLists.running, proc, RUNNING);
   proc->state = RUNNABLE;
   addToStateListEnd(&ptable.pLists.ready, proc);
   sched();
@@ -808,11 +786,9 @@ sleep(void *chan, struct spinlock *lk)
 
   // Go to sleep.
   proc->chan = chan;
-  if(!removeFromStateList(&ptable.pLists.running, proc, RUNNING)) {
-    panic("[sleep] Failed to remove proc from 'RUNNING' list.\n");
-  }
+  removeFromStateList2(&ptable.pLists.running, proc, RUNNING);
   proc->state = SLEEPING;
-  addToStateListHead(&ptable.pLists.sleep, proc, SLEEPING);
+  addToStateListHead2(&ptable.pLists.sleep, proc, SLEEPING);
   sched();
 
   // Tidy up.
@@ -867,9 +843,7 @@ wakeup1(void *chan)
   // Remove all procs which were added to ps array from sleeping list
   for(int pi = 0; pi < i; pi++) {
     p = ps[pi];
-    if(!(removeFromStateList(&ptable.pLists.sleep, p, SLEEPING))) {
-      panic("[wakeup1] Failed to remove proc from 'SLEEPING' list.\n");
-    }
+    removeFromStateList2(&ptable.pLists.sleep, p, SLEEPING);
     p->state = RUNNABLE;
     addToStateListEnd(&ptable.pLists.ready, p);
   }
@@ -927,9 +901,7 @@ kill(int pid)
         p->killed = 1;
         // Wake process from sleep if necessary.
         if(p->state == SLEEPING) {
-          if(!(removeFromStateList(&ptable.pLists.sleep, p, SLEEPING))){
-            panic("[kill] Failed to remove proc from 'SLEEPING' list.\n");
-          }
+          removeFromStateList2(&ptable.pLists.sleep, p, SLEEPING);
           p->state = RUNNABLE;
           addToStateListEnd(&ptable.pLists.ready, p);
           release(&ptable.lock);
@@ -1189,9 +1161,9 @@ addToStateListHead2(struct proc** list, struct proc* proc, enum procstate state)
 }
 
 static int
-removeFromStateList(struct proc** list, struct proc* proc, enum procstate state) {
+removeFromStateList(struct proc** list, struct proc* proc) {
   struct proc *prev, *curr;
-  if(proc->state == state && *list) {
+  if(*list) {
     prev = *list;
     curr = *list;
     while(curr != proc && curr->next) {
@@ -1215,10 +1187,10 @@ removeFromStateList(struct proc** list, struct proc* proc, enum procstate state)
 
 static void
 removeFromStateList2(struct proc** list, struct proc* proc, enum procstate state) {
-  if(!removeFromStateList(list, proc, state))
+  if(!removeFromStateList(list, proc))
     panic("removeFromStateList2: Failed to remove proc from the state list");
   if(proc->state != state)
-    panic("removeFromStateList2: The state of the removed proc is different than expected");
+    panic("removeFromStateList2: The state of the removed proc is different from the expected");
 }
 
 // Check if the state of a proc is equal to the given state
