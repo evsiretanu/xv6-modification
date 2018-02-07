@@ -45,8 +45,13 @@ static void wakeup1(void *chan);
 #ifdef CS333_P4
 static struct proc* popStateList(struct proc**, enum procstate);
 static void addToStateListEnd(struct proc**, struct proc*);
-static void addToStateListHead(struct proc**, struct proc*);
+
+static int addToStateListHead(struct proc**, struct proc*, enum procstate);
+static void addToStateListHead2(struct proc**, struct proc*, enum procstate);
+
 static int removeFromStateList(struct proc**, struct proc*, enum procstate);
+static void removeFromStateList2(struct proc**, struct proc*, enum procstate);
+
 static int stateEqual(struct proc*, enum procstate);
 #endif
 
@@ -83,7 +88,11 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-  addToStateListHead(&ptable.pLists.embryo, p);
+
+  addToStateListHead2(&ptable.pLists.embryo, p, EMBRYO);
+  //if(!addToStateListHead(&ptable.pLists.embryo, p, EMBRYO))
+  //  panic("allocproc: Failed to add proc to EMBRYO state list.");
+
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -91,11 +100,17 @@ found:
     #ifdef CS333_P4
     // Remove from embryo list if out of memory
     acquire(&ptable.lock);
-    if(!removeFromStateList(&ptable.pLists.embryo, p, EMBRYO)){
-      panic("[allocproc] Failed to remove proc from EMBRYO state list.\n");
-    }
+
+    if(!removeFromStateList(&ptable.pLists.embryo, p, EMBRYO))
+      panic("allocproc: Failed to remove proc from EMBRYO state list.");
+
+    if(!stateEqual(p, EMBRYO))
+      panic("allocproc: Proc does not match EMBRYO state");
+
     p->state = UNUSED;
-    addToStateListHead(&ptable.pLists.free, p);
+    if(!addToStateListHead(&ptable.pLists.free, p, UNUSED))
+      panic("allocporc: Failed to add proc to EMBRYO state list.");
+
     release(&ptable.lock);
     #else
     p->state = UNUSED;
@@ -185,7 +200,7 @@ userinit(void)
     panic("[userinit] Failed to remove init proc from EMBRYO state list.\n");
   }
   p->state = RUNNABLE;
-  addToStateListHead(&ptable.pLists.ready, p);  // Ready list is empty before this
+  addToStateListHead(&ptable.pLists.ready, p, RUNNABLE);  // Ready list is empty before this
   release(&ptable.lock);
 }
 
@@ -285,7 +300,7 @@ fork(void)
       panic("[fork] Failed to remove proc from 'EMBRYO' list.\n");
     }
     np->state = UNUSED;
-    addToStateListHead(&ptable.pLists.free, np);
+    addToStateListHead(&ptable.pLists.free, np, UNUSED);
     release(&ptable.lock);
     return -1;
   }
@@ -422,7 +437,7 @@ exit(void)
     panic("[exit] Failed to remove proc from 'RUNNING' list.\n");
   }
   proc->state = ZOMBIE;
-  addToStateListHead(&ptable.pLists.zombie, proc);
+  addToStateListHead(&ptable.pLists.zombie, proc, ZOMBIE);
   // Jump into the scheduler, never to return.
   sched();
   panic("zombie exit");
@@ -511,7 +526,7 @@ wait(void)
               panic("[wait] Failed to remove proc from 'ZOMBIE' list.\n");
             }
             p->state = UNUSED;
-            addToStateListHead(&ptable.pLists.free, p);
+            addToStateListHead(&ptable.pLists.free, p, UNUSED);
             release(&ptable.lock);
             return pid;
           }
@@ -611,7 +626,7 @@ scheduler(void)
       switchuvm(p);
       p->state = RUNNING;
       p->cpu_ticks_in = ticks;
-      addToStateListHead(&ptable.pLists.running, p);
+      addToStateListHead(&ptable.pLists.running, p, RUNNING);
 
       swtch(&cpu->scheduler, proc->context);
       switchkvm();
@@ -797,7 +812,7 @@ sleep(void *chan, struct spinlock *lk)
     panic("[sleep] Failed to remove proc from 'RUNNING' list.\n");
   }
   proc->state = SLEEPING;
-  addToStateListHead(&ptable.pLists.sleep, proc);
+  addToStateListHead(&ptable.pLists.sleep, proc, SLEEPING);
   sched();
 
   // Tidy up.
@@ -1155,20 +1170,28 @@ addToStateListEnd(struct proc** list, struct proc* proc) {
   }
 }
 
-static void
-addToStateListHead(struct proc** list, struct proc* proc) {
+static int
+addToStateListHead(struct proc** list, struct proc* proc, enum procstate state) {
+  // If a null pointer was passed or state is not the expected
+  if(proc->state != state) {
+    return 0;
+  }
+
   proc->next = *list;
   *list = proc;
+  return 1;
+}
+
+static void
+addToStateListHead2(struct proc** list, struct proc* proc, enum procstate state) {
+  if(!addToStateListHead(list, proc, state))
+    panic("addToStateListHead2: Failed to add proc to the state list");
 }
 
 static int
 removeFromStateList(struct proc** list, struct proc* proc, enum procstate state) {
   struct proc *prev, *curr;
-  if(proc->state != state) {
-    cprintf("Attempted to remove \'%s\' proc from a state list. Actual state: %s.\n", states[state], states[proc->state]);
-    //panic("State  list error");
-  }
-  else if(*list){
+  if(proc->state == state && *list) {
     prev = *list;
     curr = *list;
     while(curr != proc && curr->next) {
@@ -1189,6 +1212,14 @@ removeFromStateList(struct proc** list, struct proc* proc, enum procstate state)
   return 0;
 }
 
+
+static void
+removeFromStateList2(struct proc** list, struct proc* proc, enum procstate state) {
+  if(!removeFromStateList(list, proc, state))
+    panic("removeFromStateList2: Failed to remove proc from the state list");
+  if(proc->state != state)
+    panic("removeFromStateList2: The state of the removed proc is different than expected");
+}
 
 // Check if the state of a proc is equal to the given state
 static int
