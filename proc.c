@@ -1,4 +1,3 @@
-#include "RMME.h"
 #include "types.h"
 #include "defs.h"
 #include "param.h"
@@ -92,7 +91,9 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
 
+  #ifdef CS333_P4
   addToStateListHead2(&ptable.pLists.embryo, p, EMBRYO);
+  #endif
   release(&ptable.lock);
 
   // Allocate kernel stack.
@@ -869,7 +870,7 @@ kill(int pid)
     }
   }
   release(&ptable.lock);
-  return -1;p->killed
+  return -1;
 
   // ----------------- FIX -----------------------
 }

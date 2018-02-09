@@ -1,13 +1,13 @@
 # Set flag to correct CS333 project number: 1, 2, ...
 # 0 == original xv6-pdx distribution functionality
-CS333_PROJECT ?= 2
+CS333_PROJECT ?= 0
 CS333_CFLAGS = 
 CS333_UPROGS =
 CS333_TPROGS =
 PRINT_SYSCALLS ?= 0
 
-CS333_CFLAGS += -DCS333_P4
-CS333_UPROGS += _zf
+#CS333_CFLAGS += -DCS333_P4
+#CS333_UPROGS += _zf
 
 ifeq ($(PRINT_SYSCALLS), 1)
 CS333_CFLAGS += -DPRINT_SYSCALLS

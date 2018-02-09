@@ -1,2 +1,2 @@
 #/bin/sh
-ls *.c | xargs -I {} sed -i '1s/^/\#include \"RMME.h\"\n/' {}
+ls *.c | xargs -I {} sed -zi '1s/^\#include \"RMME.h\"\n//' {}

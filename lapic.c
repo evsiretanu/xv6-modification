@@ -1,4 +1,3 @@
-#include "RMME.h"
 // The local APIC manages internal (non-I/O) interrupts.
 // See Chapter 8 & Appendix C of Intel processor manual volume 3.
 // As of 7/26/2016, Intel processor manual Chapter 10 of Volume 3

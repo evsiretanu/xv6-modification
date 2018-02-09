@@ -1,4 +1,3 @@
-#include "RMME.h"
 // Demonstrate that moving the "acquire" in iderw after the loop that
 // appends to the idequeue results in a race.
 
