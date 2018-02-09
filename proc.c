@@ -43,8 +43,11 @@ extern void trapret(void);
 static void wakeup1(void *chan);
 
 #ifdef CS333_P4
-static struct proc* popStateList(struct proc**, enum procstate);
-static void addToStateListEnd(struct proc**, struct proc*);
+static struct proc* popStateList(struct proc**);
+static struct proc* popStateList2(struct proc**, enum procstate);
+
+static int addToStateListEnd(struct proc**, struct proc*);
+static void addToStateListEnd2(struct proc**, struct proc*, enum procstate);
 
 static int addToStateListHead(struct proc**, struct proc*, enum procstate);
 static void addToStateListHead2(struct proc**, struct proc*, enum procstate);
@@ -79,7 +82,7 @@ allocproc(void)
     if(p->state == UNUSED)
       goto found;
   #else
-  if((p = popStateList(&ptable.pLists.free, UNUSED)) != 0)
+  if((p = popStateList2(&ptable.pLists.free, UNUSED)) != 0)
     goto found;
   #endif
   release(&ptable.lock);
@@ -315,7 +318,7 @@ fork(void)
   acquire(&ptable.lock);
   removeFromStateList2(&ptable.pLists.embryo, np, EMBRYO);
   np->state = RUNNABLE;
-  addToStateListEnd(&ptable.pLists.ready, np);
+  addToStateListEnd2(&ptable.pLists.ready, np, RUNNABLE);
   release(&ptable.lock);
 
   return pid;
@@ -597,7 +600,7 @@ scheduler(void)
     idle = 1;  // assume idle unless we schedule a process
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    if((p = popStateList(&ptable.pLists.ready, RUNNABLE))){
+    if((p = popStateList2(&ptable.pLists.ready, RUNNABLE))){
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
@@ -698,7 +701,7 @@ yield(void)
   // Remove from running list
   removeFromStateList2(&ptable.pLists.running, proc, RUNNING);
   proc->state = RUNNABLE;
-  addToStateListEnd(&ptable.pLists.ready, proc);
+  addToStateListEnd2(&ptable.pLists.ready, proc, RUNNABLE);
   sched();
   release(&ptable.lock);
 }
@@ -823,29 +826,21 @@ static void
 wakeup1(void *chan)
 {
   // The lock was aquired in wakeup()
-  struct proc* ps[NPROC];
   struct proc* p = ptable.pLists.sleep;
-  int i = 0;
+  struct proc* runble;
 
-  // ---------------- FIX ------------------------------
-
-  // Add sleeping procs to a temporary array ps. Done in order to use
-  // the already written helpers for removal, instead of removing while
-  // walking the sleep list manually
-  while(p && i < NPROC) {
+  // Remove from sleeping list and add to running
+  while(p) {
     if(p->chan == chan) {
-      ps[i] = p;
-      i++;
+      runble = p;
+      p = p->next;
+      removeFromStateList2(&ptable.pLists.sleep, runble, SLEEPING);
+      runble->state = RUNNABLE;
+      addToStateListEnd2(&ptable.pLists.ready, runble, RUNNABLE);
     }
-    p = p->next;
-  }
-
-  // Remove all procs which were added to ps array from sleeping list
-  for(int pi = 0; pi < i; pi++) {
-    p = ps[pi];
-    removeFromStateList2(&ptable.pLists.sleep, p, SLEEPING);
-    p->state = RUNNABLE;
-    addToStateListEnd(&ptable.pLists.ready, p);
+    else {
+      p = p->next;
+    }
   }
 }
 #endif
@@ -881,6 +876,8 @@ kill(int pid)
   }
   release(&ptable.lock);
   return -1;p->killed
+
+  // ----------------- FIX -----------------------
 }
 #else
 int
@@ -903,7 +900,7 @@ kill(int pid)
         if(p->state == SLEEPING) {
           removeFromStateList2(&ptable.pLists.sleep, p, SLEEPING);
           p->state = RUNNABLE;
-          addToStateListEnd(&ptable.pLists.ready, p);
+          addToStateListEnd2(&ptable.pLists.ready, p, RUNNABLE);
           release(&ptable.lock);
           return 0;
         }
@@ -942,7 +939,7 @@ procdump(void)
   int elaps, elaps_1, elaps_10, elaps_100, elaps_1000;
 
   #ifdef CS333_P2
-    int ppid, cputick_1, cputick_10;
+    int ppid, cputick_1, cputick_10, cputick_100, cputick_1000;
     cprintf("\nPID\tName\tUID\tGID\tPPID\tElapsed\tCPU\tState\tSize\t PCs\n");    // P2
   #else
     cprintf("\nPID\tState\tName\tElapsed\t PCs\n");                              // P1
@@ -970,18 +967,19 @@ procdump(void)
       elaps_1000  = (elaps%10);     // 1000th of a second
 
     #ifdef CS333_P2
-      cputick_1   = p->cpu_ticks_total/1000;       // CPU time in seconds
-      cputick_10  = (p->cpu_ticks_total/100)%10;  // CPU time in 10th of a second
-
+      cputick_1    = p->cpu_ticks_total/1000;       // CPU time in seconds
+      cputick_10   = (p->cpu_ticks_total/100)%10;  // CPU time in 10th of a second
+      cputick_100  = (p->cpu_ticks_total/10)%10;
+      cputick_1000 = (p->cpu_ticks_total%10); 
       // Get parent pid
-      if(p->pid == 1)
-        ppid = 1;
-      else
+      if(p->parent)
         ppid = p->parent->pid;
+      else
+        ppid = initproc->pid;
 
       // P2
-      cprintf("%d\t%s\t%d\t%d\t%d\t%d.%d%d%d\t%d.%d\t%s\t%d", p->pid, p->name, p->uid, p->gid, ppid,
-              elaps_1, elaps_10, elaps_100, elaps_1000, cputick_1, cputick_10, state, p->sz);
+      cprintf("%d\t%s\t%d\t%d\t%d\t%d.%d%d%d\t%d.%d%d%d\t%s\t%d", p->pid, p->name, p->uid, p->gid, ppid,
+              elaps_1, elaps_10, elaps_100, elaps_1000, cputick_1, cputick_10, cputick_100, cputick_1000, state, p->sz);
     #else
       // P1
       cprintf("\t%d.%d%d%d", elaps_1, elaps_10, elaps_100, elaps_1000);
@@ -1014,10 +1012,10 @@ getuprocs(int max, struct uproc *procs) {
       procs->pid = p->pid;
       procs->uid = p->uid;
       procs->gid = p->gid;
-      if(p->pid == 1)
-        procs->ppid = 1;
-      else
+      if(p->parent)
         procs->ppid = p->parent->pid;
+      else
+        procs->ppid = initproc->pid;
       procs->elapsed_ticks = ticks - p->start_ticks;
       procs->CPU_total_ticks = p->cpu_ticks_total;
       procs->size = p->sz;
@@ -1054,7 +1052,7 @@ printdump(struct proc* list) {
 void
 dumpsleep(void) {
   acquire(&ptable.lock);
-  cprintf("Sleep List Processes:\n");
+  cprintf("\nSleep List Processes:\n");
   printdump(ptable.pLists.sleep);
   release(&ptable.lock);
 }
@@ -1063,7 +1061,7 @@ dumpsleep(void) {
 void
 dumpready(void) {
   acquire(&ptable.lock);
-  cprintf("Ready List Processes:\n");
+  cprintf("\nReady List Processes:\n");
   printdump(ptable.pLists.ready);
   release(&ptable.lock);
 }
@@ -1072,7 +1070,7 @@ dumpready(void) {
 void
 dumpzombie(void) {
   struct proc *p;
-  int ppid = 1;
+  int ppid;
 
   acquire(&ptable.lock);
   p = ptable.pLists.zombie;
@@ -1083,9 +1081,13 @@ dumpzombie(void) {
     return;
   }
   while(p) {
-    if(proc != initproc) {
-      ppid = p->parent->pid;  // Get PPID of proc if not init
+    if(p->parent) {
+      ppid = p->parent->pid;
     }
+    else {
+      ppid = initproc->pid;
+    }
+
     cprintf("(%d,%d)", p->pid, ppid);
     if(p->next) {
       cprintf(" -> ");
@@ -1106,21 +1108,17 @@ void dumpfree(void) {
     free++;
     p = p->next;
   }
-  cprintf("Free List Size: %d Processes\n", free);
+  cprintf("\nFree List Size: %d Processes\n", free);
   release(&ptable.lock);
 }
 
 // Pop a process from the front of a given state list
 static struct proc*
-popStateList(struct proc** list, enum procstate state) {
+popStateList(struct proc** list) {
   struct proc *p;
 
   if(*list == 0)
     return 0;
-  if(!stateEqual(*list, state)) {
-    cprintf("Attempted to remove proc with state \'%s\' from a \'%s\' state list.", states[state], states[(*list)->state]);
-    panic("State list error");
-  }
 
   p = *list;
   *list = (*list)->next;
@@ -1128,8 +1126,19 @@ popStateList(struct proc** list, enum procstate state) {
   return p;
 }
 
+// Wrapper for popStateList. Checks the status of the removed proc
+static struct proc*
+popStateList2(struct proc** list, enum procstate state) {
+  struct proc *p;
 
-static void
+  if((p = popStateList(list)))
+    if(!stateEqual(p, state))
+      panic("popStateList2: The state of the removed proc is different from the expected");
+
+  return p;
+}
+
+static int
 addToStateListEnd(struct proc** list, struct proc* proc) {
   struct proc* curr = *list;
   if(*list == 0) {
@@ -1140,6 +1149,15 @@ addToStateListEnd(struct proc** list, struct proc* proc) {
       curr = curr->next;
     curr->next = proc;
   }
+  return 1;
+}
+
+static void
+addToStateListEnd2(struct proc** list, struct proc* proc, enum procstate state) {
+  if(!stateEqual(proc, state))
+    panic("addToStateListEnd2: Attemped to add a proc with a state different from the expected");
+  if(!addToStateListEnd(list, proc))
+    panic("addToStateListHead2: Failed to add proc to the state list");
 }
 
 static int
@@ -1154,8 +1172,11 @@ addToStateListHead(struct proc** list, struct proc* proc, enum procstate state) 
   return 1;
 }
 
+// Wrapper for addToStateListHead
 static void
 addToStateListHead2(struct proc** list, struct proc* proc, enum procstate state) {
+  if(!stateEqual(proc, state))
+    panic("addToStateListHead2: Attemped to add a proc with a state different from the expected");
   if(!addToStateListHead(list, proc, state))
     panic("addToStateListHead2: Failed to add proc to the state list");
 }
@@ -1184,12 +1205,12 @@ removeFromStateList(struct proc** list, struct proc* proc) {
   return 0;
 }
 
-
+// Wrapper for removeFromStateList
 static void
 removeFromStateList2(struct proc** list, struct proc* proc, enum procstate state) {
   if(!removeFromStateList(list, proc))
     panic("removeFromStateList2: Failed to remove proc from the state list");
-  if(proc->state != state)
+  if(!stateEqual(proc, state))
     panic("removeFromStateList2: The state of the removed proc is different from the expected");
 }
 
@@ -1202,6 +1223,5 @@ stateEqual(struct proc* proc, enum procstate state) {
   }
   return 0;
 }
-
 
 #endif
