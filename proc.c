@@ -49,7 +49,7 @@ static struct proc* popStateList2(struct proc**, enum procstate);
 static int addToStateListEnd(struct proc**, struct proc*);
 static void addToStateListEnd2(struct proc**, struct proc*, enum procstate);
 
-static int addToStateListHead(struct proc**, struct proc*, enum procstate);
+static int addToStateListHead(struct proc**, struct proc*);
 static void addToStateListHead2(struct proc**, struct proc*, enum procstate);
 
 static int removeFromStateList(struct proc**, struct proc*);
@@ -103,7 +103,6 @@ found:
     removeFromStateList2(&ptable.pLists.embryo, p, EMBRYO);
     p->state = UNUSED;
     addToStateListHead2(&ptable.pLists.free, p, UNUSED);
-
     release(&ptable.lock);
     #else
     p->state = UNUSED;
@@ -188,11 +187,15 @@ userinit(void)
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
+  #ifdef CS333_P4
   acquire(&ptable.lock);
   removeFromStateList2(&ptable.pLists.embryo, p, EMBRYO);
   p->state = RUNNABLE;
   addToStateListHead2(&ptable.pLists.ready, p, RUNNABLE);  // Ready list is empty before this
   release(&ptable.lock);
+  #else
+  p->state = RUNNABLE;
+  #endif
 }
 
 // Grow current process's memory by n bytes.
@@ -223,7 +226,6 @@ growproc(int n)
 int
 fork(void)
 {
-  cprintf("FORK=>");
   int i, pid;
   struct proc *np;
 
@@ -286,7 +288,7 @@ fork(void)
     acquire(&ptable.lock);
     np->kstack = 0;
 
-    // Move proc back to unused if thre is not enough memory
+    // Move proc back to unused if there is not enough memory
     removeFromStateList2(&ptable.pLists.embryo, np, EMBRYO);
     np->state = UNUSED;
     addToStateListHead2(&ptable.pLists.free, np, UNUSED);
@@ -309,8 +311,8 @@ fork(void)
 
   pid = np->pid;
 
-  // Copy the uid and the gid of the parent. CS333_P3P4 also includes
-  // CS333_P2 flag, so the check for this functionality is not needed.
+  // Copy the uid and the gid of the parent. This is P2 functionality.
+  // CS333_P3P4 also includes CS333_P2 flag.
   np->uid = proc->uid;
   np->gid = proc->gid;
 
@@ -332,7 +334,6 @@ fork(void)
 void
 exit(void)
 {
-  cprintf("EXIT=>");
   struct proc *p;
   int fd;
 
@@ -368,7 +369,6 @@ exit(void)
 
   // Jump into the scheduler, never to return.
   proc->state = ZOMBIE;
-  //panic("EXIT=>");
   sched();
   panic("zombie exit");
 }
@@ -378,6 +378,7 @@ exit(void)
 {
   // Make an array of addresses for the state lists. This is used in order
   // to not have duplicate code for iterating over each one individually.
+  // Lock not needed here since addresses of variables do not change
   struct proc **stateLists[] = {&ptable.pLists.sleep, &ptable.pLists.ready,
                                &ptable.pLists.running, &ptable.pLists.zombie};
   struct proc *p;
@@ -436,7 +437,6 @@ exit(void)
 int
 wait(void)
 {
-  //cprintf("WAIT=>");
   struct proc *p;
   int havekids, pid;
 
@@ -635,8 +635,6 @@ void
 sched(void)
 {
   int intena;
-  //panic("NO");
-  cprintf("SCHED");
   if(!holding(&ptable.lock))
     panic("sched ptable.lock");
   if(cpu->ncli != 1)
@@ -685,8 +683,6 @@ yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
   proc->state = RUNNABLE;
-  cprintf("YIELD");
-  //panic("YIELD");
   sched();
   release(&ptable.lock);
 }
@@ -754,8 +750,6 @@ sleep(void *chan, struct spinlock *lk)
   // Go to sleep.
   proc->chan = chan;
   proc->state = SLEEPING;
-  cprintf("SLEEP");
-  //panic("SLEEP");
   sched();
 
   // Tidy up.
@@ -1035,6 +1029,7 @@ getuprocs(int max, struct uproc *procs) {
 // Used to print the given state list entirely
 void
 printdump(struct proc* list) {
+  // Lock must be aquired before calling this function
   struct proc *p = list;
 
   if(!p) {
@@ -1115,6 +1110,7 @@ void dumpfree(void) {
 // Pop a process from the front of a given state list
 static struct proc*
 popStateList(struct proc** list) {
+  // ptable lock must be aquired before calling this funciton
   struct proc *p;
 
   if(*list == 0)
@@ -1138,11 +1134,13 @@ popStateList2(struct proc** list, enum procstate state) {
   return p;
 }
 
+// Used for addint an element to the end of a state list
 static int
 addToStateListEnd(struct proc** list, struct proc* proc) {
+  // ptable lock must be aquired before calling this funciton
   struct proc* curr = *list;
   if(*list == 0) {
-    *list = proc;
+    *list = proc;   // Empty list
   }
   else {
     while(curr->next)
@@ -1152,6 +1150,7 @@ addToStateListEnd(struct proc** list, struct proc* proc) {
   return 1;
 }
 
+// Wrapper for addToStateListEnd. Checks the state of a proc and success/failure of adding
 static void
 addToStateListEnd2(struct proc** list, struct proc* proc, enum procstate state) {
   if(!stateEqual(proc, state))
@@ -1160,13 +1159,9 @@ addToStateListEnd2(struct proc** list, struct proc* proc, enum procstate state) 
     panic("addToStateListHead2: Failed to add proc to the state list");
 }
 
+// Used to add to the head of a state list
 static int
-addToStateListHead(struct proc** list, struct proc* proc, enum procstate state) {
-  // If a null pointer was passed or state is not the expected
-  if(proc->state != state) {
-    return 0;
-  }
-
+addToStateListHead(struct proc** list, struct proc* proc) {
   proc->next = *list;
   *list = proc;
   return 1;
@@ -1177,12 +1172,14 @@ static void
 addToStateListHead2(struct proc** list, struct proc* proc, enum procstate state) {
   if(!stateEqual(proc, state))
     panic("addToStateListHead2: Attemped to add a proc with a state different from the expected");
-  if(!addToStateListHead(list, proc, state))
+  if(!addToStateListHead(list, proc))
     panic("addToStateListHead2: Failed to add proc to the state list");
 }
 
+// Used to remove an element from a state list.
 static int
 removeFromStateList(struct proc** list, struct proc* proc) {
+  // ptable lock must be aquired before calling this funciton
   struct proc *prev, *curr;
   if(*list) {
     prev = *list;
@@ -1205,7 +1202,7 @@ removeFromStateList(struct proc** list, struct proc* proc) {
   return 0;
 }
 
-// Wrapper for removeFromStateList
+// Wrapper for removeFromStateList. Checks the state of a proc and success/failure of removal
 static void
 removeFromStateList2(struct proc** list, struct proc* proc, enum procstate state) {
   if(!removeFromStateList(list, proc))
