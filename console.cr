@@ -191,7 +191,7 @@ consoleintr(int (*getc)(void))
 {
   int c, doprocdump = 0;
 
-  #ifdef CS333_P3P4
+  #ifdef CS333_P4
   int dodumpsleep = 0, dodumpready = 0, dodumpzombie = 0, dodumpfree = 0;
   #endif
 
@@ -202,7 +202,7 @@ consoleintr(int (*getc)(void))
       doprocdump = 1;   // procdump() locks cons.lock indirectly; invoke later
       break;
 
-    #ifdef CS333_P3P4
+    #ifdef CS333_P4
     case C('S'):
       dodumpsleep = 1;
       break;
@@ -248,7 +248,7 @@ consoleintr(int (*getc)(void))
     procdump();  // now call procdump() wo. cons.lock held
   }
 
-  #ifdef CS333_P3P4
+  #ifdef CS333_P4
   if(dodumpsleep) {
     dumpsleep();
   }

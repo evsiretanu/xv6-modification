@@ -4,7 +4,7 @@
 int main(int argc, char** argv) {
   int pc = 0;
   int rc;
-  int MAXPROCS = 10;
+  int MAXPROCS = 64;
   int child[64];
 
   for(int i = 0; i < MAXPROCS; i++) {
@@ -15,8 +15,10 @@ int main(int argc, char** argv) {
 
     } else if (rc == 0) {
       printf(1, "Proc created. PID: %d\n", getpid());
-      // Loop forever in child
-      for (;;);
+        // Sleep for a long time
+        //sleep(1000 * 1000);
+      for(;;);
+
     }
     else {
       child[pc] = rc;
@@ -33,8 +35,8 @@ int main(int argc, char** argv) {
   for(int i = 0; i < pc; i++) {
     printf(1, "\nKilling child pid: %d\n", child[i]);
     kill(child[i]);
-    printf(1, "Parent sleeping for 2 sec..\n");
-    sleep(2 * 1000);
+    printf(1, "Parent sleeping for 3 sec..\n");
+    sleep(3 * 1000);
     if(wait() < 0)
       break;
   }

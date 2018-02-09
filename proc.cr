@@ -11,7 +11,7 @@
 #include "uproc.h"
 #endif
 
-#ifdef CS333_P3P4
+#ifdef CS333_P4
 
 struct StateLists {
   struct proc* ready;
@@ -28,7 +28,7 @@ struct {
   struct spinlock lock;
   struct proc proc[NPROC];
 
-#ifdef CS333_P3P4
+#ifdef CS333_P4
   struct StateLists pLists;
 #endif
 
@@ -41,7 +41,7 @@ extern void forkret(void);
 extern void trapret(void);
 static void wakeup1(void *chan);
 
-#ifdef CS333_P3P4
+#ifdef CS333_P4
 static struct proc* popStateList(struct proc**);
 static struct proc* popStateList2(struct proc**, enum procstate);
 
@@ -76,7 +76,7 @@ allocproc(void)
 
   acquire(&ptable.lock);
 
-  #ifndef CS333_P3P4
+  #ifndef CS333_P4
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     if(p->state == UNUSED)
       goto found;
@@ -91,14 +91,14 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
 
-  #ifdef CS333_P3P4
+  #ifdef CS333_P4
   addToStateListHead2(&ptable.pLists.embryo, p, EMBRYO);
   #endif
   release(&ptable.lock);
 
   // Allocate kernel stack.
   if((p->kstack = kalloc()) == 0){
-    #ifdef CS333_P3P4
+    #ifdef CS333_P4
     // Remove from embryo list if out of memory
     acquire(&ptable.lock);
     removeFromStateList2(&ptable.pLists.embryo, p, EMBRYO);
@@ -145,7 +145,7 @@ userinit(void)
   struct proc *p;
   extern char _binary_initcode_start[], _binary_initcode_size[];
 
-  #ifdef CS333_P3P4
+  #ifdef CS333_P4
   acquire(&ptable.lock);
   ptable.pLists.ready   = 0;
   ptable.pLists.free    = 0;
@@ -188,7 +188,7 @@ userinit(void)
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
-  #ifdef CS333_P3P4
+  #ifdef CS333_P4
   acquire(&ptable.lock);
   removeFromStateList2(&ptable.pLists.embryo, p, EMBRYO);
   p->state = RUNNABLE;
@@ -223,7 +223,7 @@ growproc(int n)
 // Sets up stack to return as if from system call.
 // Caller must set state of returned proc to RUNNABLE.
 
-#ifndef CS333_P3P4
+#ifndef CS333_P4
 int
 fork(void)
 {
@@ -331,7 +331,7 @@ fork(void)
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
 // until its parent calls wait() to find out it exited.
-#ifndef CS333_P3P4
+#ifndef CS333_P4
 void
 exit(void)
 {
@@ -434,7 +434,7 @@ exit(void)
 
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
-#ifndef CS333_P3P4
+#ifndef CS333_P4
 int
 wait(void)
 {
@@ -540,7 +540,7 @@ wait(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
-#ifndef CS333_P3P4
+#ifndef CS333_P4
 // original xv6 scheduler. Use if CS333_P3P4 NOT defined.
 void
 scheduler(void)
@@ -631,7 +631,7 @@ scheduler(void)
 
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state.
-#ifndef CS333_P3P4
+#ifndef CS333_P4
 void
 sched(void)
 {
@@ -678,7 +678,7 @@ sched(void)
 
 // Give up the CPU for one scheduling round.
 
-#ifndef CS333_P3P4
+#ifndef CS333_P4
 void
 yield(void)
 {
@@ -730,7 +730,7 @@ forkret(void)
 // 2016/12/28: ticklock removed from xv6. sleep() changed to
 // accept a NULL lock to accommodate.
 
-#ifndef CS333_P3P4
+#ifndef CS333_P4
 void
 sleep(void *chan, struct spinlock *lk)
 {
@@ -804,7 +804,7 @@ sleep(void *chan, struct spinlock *lk)
 
 
 //PAGEBREAK!
-#ifndef CS333_P3P4
+#ifndef CS333_P4
 // Wake up all processes sleeping on chan.
 // The ptable lock must be held.
 static void
@@ -852,7 +852,7 @@ wakeup(void *chan)
 // Kill the process with the given pid.
 // Process won't exit until it returns
 // to user space (see trap in trap.c).
-#ifndef CS333_P3P4
+#ifndef CS333_P4
 int
 kill(int pid)
 {
@@ -871,6 +871,8 @@ kill(int pid)
   }
   release(&ptable.lock);
   return -1;
+
+  // ----------------- FIX -----------------------
 }
 #else
 int
@@ -1023,7 +1025,7 @@ getuprocs(int max, struct uproc *procs) {
 }
 #endif
 
-#ifdef CS333_P3P4
+#ifdef CS333_P4
 
 // Used to print the given state list entirely
 void

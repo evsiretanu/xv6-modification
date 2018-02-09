@@ -75,7 +75,7 @@ struct proc {
   uint cpu_ticks_in;           // Time when the process is transferred into running state
   #endif
 
-  #ifdef CS333_P4
+  #ifdef CS333_P3P4
   struct proc* next;           // Next proc in the state list
   #endif
 };

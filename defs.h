@@ -125,7 +125,7 @@ void            yield(void);
 #ifdef CS333_P2
 int             getuprocs(int, struct uproc*);
 #endif
-#ifdef CS333_P4
+#ifdef CS333_P3P4
 void printdump(struct proc*);
 void dumpsleep(void);
 void dumpready(void);
