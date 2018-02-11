@@ -36,7 +36,7 @@ main(int argc, char* argv[])
     }
   }
 
-  printf(1, "%s ran in %d.%d%d seconds\n", args[0], total_time/1000, (total_time/100)%10, (total_time/10)%10);
+  printf(1, "%s ran in %d.%d%d%d seconds\n", args[0], total_time/1000, (total_time/100)%10, (total_time/10)%10, (total_time%10));
   exit();
 }
 

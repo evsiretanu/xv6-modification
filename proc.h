@@ -74,6 +74,10 @@ struct proc {
   uint cpu_ticks_total;        // Total cpu time a process uses
   uint cpu_ticks_in;           // Time when the process is transferred into running state
   #endif
+
+  #ifdef CS333_P3P4
+  struct proc* next;           // Next proc in the state list
+  #endif
 };
 
 // Process memory is laid out contiguously, low addresses first:

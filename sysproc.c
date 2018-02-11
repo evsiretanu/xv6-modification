@@ -151,12 +151,10 @@ sys_getgid(void) {
 
 uint
 sys_getppid(void) {
-  if(proc->pid == 1) {
-    // This is true for the very first proc
-    // No need to check for parent
-    return 1;
+  if(proc->parent) {
+    return proc->parent->pid;
   }
-  return proc->parent->pid;
+  return 1; // Init proc pid;
 }
 
 int
@@ -167,7 +165,7 @@ sys_getprocs() {
   if(argint(0, &max) < 0)
     return -1;
 
-  if(argptr(1, (void*)&procs, sizeof(struct uproc)) < 0)
+  if(argptr(1, (void*)&procs, sizeof(struct uproc)* max) < 0)
     return -1;
 
   return getuprocs(max, procs);
