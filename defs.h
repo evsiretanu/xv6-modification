@@ -131,6 +131,7 @@ void dumpsleep(void);
 void dumpready(void);
 void dumpzombie(void);
 void dumpfree(void);
+int setpriority(int, int);
 #endif
 
 // swtch.S

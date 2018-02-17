@@ -1,3 +1,4 @@
+#include "RMME.h"
 #ifdef CS333_P5
 // this is an ugly series of if statements but it works
 void

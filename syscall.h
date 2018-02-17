@@ -29,3 +29,4 @@
 #define SYS_getgid  SYS_setgid+1
 #define SYS_getppid SYS_getgid+1
 #define SYS_getprocs SYS_getppid+1
+#define SYS_setpriority SYS_getprocs+1

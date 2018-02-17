@@ -77,6 +77,8 @@ struct proc {
 
   #ifdef CS333_P3P4
   struct proc* next;           // Next proc in the state list
+  uint prio;                   // Priority of a process
+  int budget;                  // Budget
   #endif
 };
 

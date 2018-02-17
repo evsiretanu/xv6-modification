@@ -1,10 +1,11 @@
+#include "RMME.h"
 #include "types.h"
 #include "user.h"
 
 int main(int argc, char** argv) {
   int pc = 0;
   int rc;
-  int MAXPROCS = 64;
+  int MAXPROCS = 15;
   int child[64];
   int cmd;
 

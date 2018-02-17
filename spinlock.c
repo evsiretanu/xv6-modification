@@ -1,3 +1,4 @@
+#include "RMME.h"
 // Mutual exclusion spin locks.
 
 #include "types.h"

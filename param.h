@@ -18,3 +18,8 @@
 #define DEFGID       0    // default gid for a process
 #endif
 
+#ifdef CS333_P3P4
+#define MAX               4   // Maximum process priority
+#define BUDGET            300 // process budget
+#define TICKS_TO_PROMOTE  600 // ticks to adjust priorities
+#endif
