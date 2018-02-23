@@ -5,7 +5,7 @@
 int main(int argc, char** argv) {
   int pc = 0;
   int rc;
-  int MAXPROCS = 15;
+  int MAXPROCS = 30;
   int child[64];
   int cmd;
 
