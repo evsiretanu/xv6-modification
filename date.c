@@ -1,4 +1,3 @@
-#include "RMME.h"
 // The code for dayofweek was obtained at:
 // https://en.wikipedia.org/wiki/Determination_of_the_day_of_the_week
 
