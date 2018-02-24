@@ -1141,6 +1141,7 @@ setpriority(int pid, int prio) {
           p->budget = BUDGET;
           addToStateListEnd2(&ptable.pLists.ready[p->prio], p, RUNNABLE);
         }
+        release(&ptable.lock);
         return 0;
       }
       p = p->next;
@@ -1156,6 +1157,7 @@ setpriority(int pid, int prio) {
           p->prio = prio;
           p->budget = BUDGET;
         }
+        release(&ptable.lock);
         return 0;
       }
       p = p->next;
@@ -1173,6 +1175,14 @@ promoteprocs(void) {
   struct proc *p, *curr;
   int slsize = sizeof(stateLists)/ sizeof(stateLists[0]);
 
+
+  // Reset the budget in the highest priority queue
+  p = ptable.pLists.ready[0];
+  while(p) {
+    p->budget = BUDGET;
+    p = p->next;
+  }
+  
   for(int i = 1; i < MAX+1 ; i++) {
     curr = ptable.pLists.ready[i];
     while(curr) {
