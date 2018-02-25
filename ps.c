@@ -20,6 +20,8 @@ main(void)
   }
 
   cp = procs;
+
+  #ifndef CS333_P3P4
   printf(1, "\nPID\tName\tUID\tGID\tPPID\tElapsed\tCPU\tState\tSize\n");
   for(int i = 0; i < size; i++) {
     printf(1, "%d\t%s\t%d\t%d\t%d\t%d.%d%d%d\t%d.%d%d%d\t%s\t%d\n",
@@ -29,6 +31,17 @@ main(void)
            cp->state, cp->size);
     cp++;
   }
+  #else
+  printf(1, "\nPID\tName\tUID\tGID\tPPID\tPrio\tElapsed\tCPU\tState\tSize\n");
+  for(int i = 0; i < size; i++) {
+    printf(1, "%d\t%s\t%d\t%d\t%d\t%d\t%d.%d%d%d\t%d.%d%d%d\t%s\t%d\n",
+           cp->pid, cp->name, cp->uid, cp->gid, cp->ppid, cp->prio,
+           cp->elapsed_ticks/1000, (cp->elapsed_ticks/100)%10, (cp->elapsed_ticks/10)%10, (cp->elapsed_ticks)%10,
+           cp->CPU_total_ticks/1000, (cp->CPU_total_ticks/100)%10,(cp->CPU_total_ticks/10)%10, (cp->CPU_total_ticks%10),
+           cp->state, cp->size);
+    cp++;
+  }
+  #endif
 
   free(procs);
   exit();

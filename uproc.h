@@ -11,6 +11,7 @@ struct uproc {
   uint elapsed_ticks;
   uint CPU_total_ticks;
   uint size;
+  uint prio;
   char state[STRMAX];
   char name[STRMAX];
 };

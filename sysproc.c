@@ -172,3 +172,16 @@ sys_getprocs() {
 }
 #endif
 
+#ifdef CS333_P3P4
+int
+sys_setpriority() {
+  int pid, prio;
+
+  if(argint(0, &pid) < 0 || argint(1, &prio) < 0)
+    return -1;
+
+  return setpriority(pid, prio);
+}
+#endif
+
+
