@@ -19,7 +19,7 @@
 #endif
 
 #ifdef CS333_P3P4
-#define MAX               7   // Maximum process priority
+#define MAX               0   // Maximum process priority
 #define BUDGET            20 // process budget
 #define TICKS_TO_PROMOTE  200 // ticks to adjust priorities
 #endif

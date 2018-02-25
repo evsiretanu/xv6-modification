@@ -758,7 +758,7 @@ yield(void)
   proc->budget -= (ticks - proc->cpu_ticks_in);   // Update budget
   demoteproc(proc);                               // Demote if necessary
   addToStateListEnd2(&ptable.pLists.ready[proc->prio], proc, RUNNABLE);
-  sched();  proc->cpu_ticks_total += (ticks - proc->cpu_ticks_in);   // Update total cpu time
+  sched();
   release(&ptable.lock);
 }
 #endif
@@ -1060,7 +1060,7 @@ procdump(void)
               elaps_1, elaps_10, elaps_100, elaps_1000, cputick_1, cputick_10, cputick_100, cputick_1000, state, p->sz);
     #else
     // P4
-    cprintf("[%d]%d\t%s\t%d\t%d\t%d\t%d\t%d.%d%d%d\t%d.%d%d%d\t%s\t%d", p->budget, p->pid, p->name, p->uid, p->gid, ppid, p->prio,
+    cprintf("%d\t%s\t%d\t%d\t%d\t%d\t%d.%d%d%d\t%d.%d%d%d\t%s\t%d", p->pid, p->name, p->uid, p->gid, ppid, p->prio,
               elaps_1, elaps_10, elaps_100, elaps_1000, cputick_1, cputick_10, cputick_100, cputick_1000, state, p->sz);
     #endif
 
