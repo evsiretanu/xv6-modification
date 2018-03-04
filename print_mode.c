@@ -1,3 +1,4 @@
+#include "RMME.h"
 #ifdef CS333_P51
 #include "types.h"
 #include "stat.h"
