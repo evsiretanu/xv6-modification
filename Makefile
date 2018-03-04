@@ -7,7 +7,7 @@ CS333_TPROGS =
 PRINT_SYSCALLS ?= 0
 
 #CS333_CFLAGS += -DCS333_P4
-#CS333_UPROGS += _priotest _testSched _setprio
+CS333_UPROGS += _chmod _chown
 
 ifeq ($(PRINT_SYSCALLS), 1)
 CS333_CFLAGS += -DPRINT_SYSCALLS

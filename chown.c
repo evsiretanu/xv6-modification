@@ -1,11 +1,13 @@
 #include "RMME.h"
-#ifdef CS333_P5
+#ifdef CS333_P51
 #include "types.h"
 #include "user.h"
 int
-main(void)
+main(int argc, char** argv)
 {
-  printf(1, "Not imlpemented yet.\n");
+  //printf(1, "Not imlpemented yet.\n");
+  int k = chown(argv[2], atoi(argv[1]));
+  printf(1, "%d\n", k);
   exit();
 }
 

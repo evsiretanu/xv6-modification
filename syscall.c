@@ -115,6 +115,11 @@ extern int sys_getprocs(void);
 extern int sys_setpriority(void);
 #endif
 
+#ifdef CS333_P51
+extern int sys_chmod(void);
+extern int sys_chown(void);
+#endif
+
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
 [SYS_exit]    sys_exit,
@@ -151,6 +156,10 @@ static int (*syscalls[])(void) = {
 #endif
 #ifdef CS333_P3P4
 [SYS_setpriority] sys_setpriority,
+#endif
+#ifdef CS333_P51
+[SYS_chmod] sys_chmod,
+[SYS_chown] sys_chown,
 #endif
 };
 
@@ -195,6 +204,9 @@ static char *syscallnames[] = {
 #endif
 #ifdef CS333_P3P4
 [SYS_setpriority], "setpriority",
+#endif
+#ifdef CS333_P51
+[SYS_chmod] sys_chmod,
 #endif
 };
 

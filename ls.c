@@ -1,10 +1,14 @@
 #include "RMME.h"
+/*
 #include "types.h"
 #include "stat.h"
 #include "user.h"
 #include "fs.h"
+*/
+#ifdef CS333_P51
 
-
+#include "print_mode.c"
+#endif
 char*
 fmtname(char *path)
 {
@@ -42,9 +46,11 @@ ls(char *path)
     close(fd);
     return;
   }
+
   
   switch(st.type){
   case T_FILE:
+    print_mode(&st);
     printf(1, "%s %d %d %d\n", fmtname(path), st.type, st.ino, st.size);
     break;
   
@@ -65,7 +71,9 @@ ls(char *path)
         printf(1, "ls: cannot stat %s\n", buf);
         continue;
       }
-      printf(1, "%s %d %d %d\n", fmtname(buf), st.type, st.ino, st.size);
+      print_mode(&st);
+      //printf(1, "\t%s %d %d %d\n", fmtname(buf), st.type, st.ino, st.size);
+      printf(1, "\t%s %d %d %d %d\n", fmtname(buf), st.uid, st.gid, st.ino, st.size);
     }
     break;
   }

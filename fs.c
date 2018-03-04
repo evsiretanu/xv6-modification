@@ -673,3 +673,49 @@ nameiparent(char *path, char *name)
 {
   return namex(path, 1, name);
 }
+
+#ifdef CS333_P51
+int
+chmod(char* pathname, int mode) {
+  struct inode *ip;
+
+  if(mode > 01777 || mode < 0000 || !pathname)
+    return -1;
+
+  begin_op();
+  if((ip = namei(pathname)) == 0) {
+    end_op();
+    return -1;
+  }
+
+  ilock(ip);
+  ip->mode.asInt = mode;
+  iupdate(ip);
+  iunlockput(ip);
+  end_op();
+  return 0;
+}
+
+int
+chown(char* pathname, int owner) {
+  struct inode *ip;
+
+  if(owner < 0 || owner > 32767)  // Check for uid validity
+    return -1;
+
+  begin_op();
+  if((ip = namei(pathname)) == 0) {
+    end_op();
+    return -1;
+  }
+
+  ilock(ip);
+  ip->uid = owner;
+  iupdate(ip);
+  iunlockput(ip);
+  end_op();
+  return 0;
+
+}
+
+#endif

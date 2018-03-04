@@ -30,3 +30,5 @@
 #define SYS_getppid SYS_getgid+1
 #define SYS_getprocs SYS_getppid+1
 #define SYS_setpriority SYS_getprocs+1
+#define SYS_chmod SYS_setpriority+1
+#define SYS_chown SYS_chmod+1

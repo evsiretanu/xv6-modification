@@ -441,3 +441,28 @@ sys_pipe(void)
   fd[1] = fd1;
   return 0;
 }
+
+#ifdef CS333_P51
+int
+sys_chmod(void){
+  char* pathname;
+  int mode;
+
+  if(argstr(0, &pathname) < 0 || argint(1, &mode) < 0)
+    return -1;
+
+  return chmod(pathname, mode);
+}
+
+int
+sys_chown(void) {
+  char *pathname;
+  int owner;
+
+  if(argstr(0, &pathname) < 0 || argint(1, &owner) < 0)
+    return -1;
+
+  return chown(pathname, owner);
+}
+
+#endif
