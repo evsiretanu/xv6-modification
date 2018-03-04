@@ -7,6 +7,9 @@
 #include "defs.h"
 #include "x86.h"
 #include "elf.h"
+#include "fs.h"
+#include "file.h"
+
 
 int
 exec(char *path, char **argv)
@@ -26,6 +29,20 @@ exec(char *path, char **argv)
   }
   ilock(ip);
   pgdir = 0;
+
+  #ifdef  CS333_P51
+  if(ip->uid == proc->uid) {
+    if(ip->mode.flags.u_x != 1)
+      goto bad;
+  }
+  else if(ip->gid == proc->gid) {
+    if(ip->mode.flags.g_x != 1)
+      goto bad;
+  }
+  else if(ip->mode.flags.o_x != 1) {
+    goto bad;
+  }
+  #endif
 
   // Check ELF header
   if(readi(ip, (char*)&elf, 0, sizeof(elf)) < sizeof(elf))
@@ -93,6 +110,12 @@ exec(char *path, char **argv)
   proc->sz = sz;
   proc->tf->eip = elf.entry;  // main
   proc->tf->esp = sp;
+
+  #ifdef CS333_P51
+  if(ip->mode.flags.setuid == 1)
+    proc->uid = ip->uid;
+  #endif
+  
   switchuvm(proc);
   freevm(oldpgdir);
   return 0;
