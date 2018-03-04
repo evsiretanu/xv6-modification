@@ -50,6 +50,7 @@ int setpriority(int, int);
 #ifdef CS333_P51
 int chmod(char*, int);
 int chown(char*, int);
+int chgrp(char*, int);
 #endif
 
 // ulib.c

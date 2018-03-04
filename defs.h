@@ -59,6 +59,7 @@ int             writei(struct inode*, char*, uint, uint);
 #ifdef CS333_P51
 int             chmod(char*, int);
 int             chown(char*, int);
+int             chgrp(char*, int);
 #endif
 
 // ide.c

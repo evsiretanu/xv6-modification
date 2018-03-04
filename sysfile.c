@@ -465,4 +465,15 @@ sys_chown(void) {
   return chown(pathname, owner);
 }
 
+int
+sys_chgrp(void) {
+  char *pathname;
+  int group;
+
+  if(argstr(0, &pathname) < 0 || argint(1, &group) < 0)
+    return -1;
+
+  return chgrp(pathname, group);
+}
+
 #endif

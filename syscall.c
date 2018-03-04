@@ -118,6 +118,7 @@ extern int sys_setpriority(void);
 #ifdef CS333_P51
 extern int sys_chmod(void);
 extern int sys_chown(void);
+extern int sys_chgrp(void);
 #endif
 
 static int (*syscalls[])(void) = {
@@ -160,6 +161,7 @@ static int (*syscalls[])(void) = {
 #ifdef CS333_P51
 [SYS_chmod] sys_chmod,
 [SYS_chown] sys_chown,
+[SYS_chgrp] sys_chgrp,
 #endif
 };
 
@@ -207,6 +209,8 @@ static char *syscallnames[] = {
 #endif
 #ifdef CS333_P51
 [SYS_chmod] sys_chmod,
+[SYS_chown] sys_chown,
+[SYS_chgrp] sys_chgrp,
 #endif
 };
 

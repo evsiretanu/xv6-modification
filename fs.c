@@ -718,4 +718,25 @@ chown(char* pathname, int owner) {
 
 }
 
+int
+chgrp(char* pathname, int group) {
+  struct inode *ip;
+
+  if(group < 0 || group > 32767)
+    return -1;
+
+  begin_op();
+  if((ip = namei(pathname)) == 0) {
+    end_op();
+    return -1;
+  }
+
+  ilock(ip);
+  ip->gid = group;
+  iupdate(ip);
+  iunlockput(ip);
+  end_op();
+  return 0;
+}
+
 #endif
