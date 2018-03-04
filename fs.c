@@ -1,3 +1,5 @@
+#include <bits/stat.h>
+#include "RMME.h"
 // File system implementation.  Five layers:
 //   + Blocks: allocator for raw disk blocks.
 //   + Log: crash recovery for multi-step updates.
@@ -186,6 +188,12 @@ ialloc(uint dev, short type)
     if(dip->type == 0){  // a free inode
       memset(dip, 0, sizeof(*dip));
       dip->type = type;
+
+      #ifdef CS333_P51
+      dip->uid = DEFUID;
+      dip->gid = DEFGID;
+      dip->mode.asInt = DEFAULT_MODE;
+      #endif
       log_write(bp);   // mark it allocated on the disk
       brelse(bp);
       return iget(dev, inum);
@@ -209,6 +217,11 @@ iupdate(struct inode *ip)
   dip->minor = ip->minor;
   dip->nlink = ip->nlink;
   dip->size = ip->size;
+  #ifdef CS333_P51
+  dip->uid = ip->uid;
+  dip->gid = ip->gid;
+  dip->mode.asInt = ip->mode.asInt;
+  #endif
   memmove(dip->addrs, ip->addrs, sizeof(ip->addrs));
   log_write(bp);
   brelse(bp);
@@ -286,6 +299,12 @@ ilock(struct inode *ip)
     ip->minor = dip->minor;
     ip->nlink = dip->nlink;
     ip->size = dip->size;
+
+    #ifdef CS333_P51
+    ip->uid = dip->uid;
+    ip->gid = dip->gid;
+    ip->mode.asInt = dip->mode.asInt;
+    #endif
     memmove(ip->addrs, dip->addrs, sizeof(ip->addrs));
     brelse(bp);
     ip->flags |= I_VALID;
@@ -427,6 +446,11 @@ stati(struct inode *ip, struct stat *st)
   st->type = ip->type;
   st->nlink = ip->nlink;
   st->size = ip->size;
+  #ifdef CS333_P51
+  st->uid = ip->uid;
+  st->gid = ip->gid;
+  st->mode.asInt = ip->mode.asInt;
+  #endif
 }
 
 //PAGEBREAK!

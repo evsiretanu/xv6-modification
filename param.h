@@ -23,3 +23,7 @@
 #define BUDGET            20 // process budget
 #define TICKS_TO_PROMOTE  200 // ticks to adjust priorities
 #endif
+
+#ifdef  CS333_P51
+#define  DEFAULT_MODE 0755
+#endif

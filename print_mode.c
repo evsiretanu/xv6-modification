@@ -1,4 +1,8 @@
-#ifdef CS333_P5
+#ifdef CS333_P51
+#include "types.h"
+#include "stat.h"
+#include "user.h"
+#include "fs.h"
 // this is an ugly series of if statements but it works
 void
 print_mode(struct stat* st)
@@ -59,4 +63,5 @@ print_mode(struct stat* st)
 
   return;
 }
+
 #endif
