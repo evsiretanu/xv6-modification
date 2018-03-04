@@ -115,7 +115,7 @@ exec(char *path, char **argv)
   if(ip->mode.flags.setuid == 1)
     proc->uid = ip->uid;
   #endif
-  
+
   switchuvm(proc);
   freevm(oldpgdir);
   return 0;

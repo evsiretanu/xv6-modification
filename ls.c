@@ -47,11 +47,11 @@ ls(char *path)
     return;
   }
 
-  
+  printf(1, "mode\t\tname\t\tuid\tgid\tinode\tsize\n");
   switch(st.type){
   case T_FILE:
     print_mode(&st);
-    printf(1, "%s %d %d %d\n", fmtname(path), st.type, st.ino, st.size);
+    printf(1, "\t%s\t%d\t%d\t%d\n", fmtname(path), st.type, st.ino, st.size);
     break;
   
   case T_DIR:
@@ -73,7 +73,7 @@ ls(char *path)
       }
       print_mode(&st);
       //printf(1, "\t%s %d %d %d\n", fmtname(buf), st.type, st.ino, st.size);
-      printf(1, "\t%s %d %d %d %d\n", fmtname(buf), st.uid, st.gid, st.ino, st.size);
+      printf(1, "\t%s\t%d\t%d\t%d\t%d\n", fmtname(buf), st.uid, st.gid, st.ino, st.size);
     }
     break;
   }
