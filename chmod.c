@@ -27,7 +27,7 @@ main(int argc, char** argv)
     exit();
   }
 
-  mode = atoo(argv[1]); // FIIIIX
+  mode = atoo(argv[1]);
   if((chmod(filename, mode)) < 0) {
     printf(2, "chmod: operation failed.\n");
   }

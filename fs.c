@@ -677,7 +677,9 @@ int
 chmod(char* pathname, int mode) {
   struct inode *ip;
 
-  if(mode > 01777 || mode < 0000 || !pathname)
+  // ip->mode.asInt sets the value to octal
+  // 1023 oct = 1023 int
+  if(mode > 1023 || mode < 0 || !pathname)
     return -1;
 
   begin_op();

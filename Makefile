@@ -1,6 +1,6 @@
 # Set flag to correct CS333 project number: 1, 2, ...
 # 0 == original xv6-pdx distribution functionality
-CS333_PROJECT ?= 4
+CS333_PROJECT ?= 5
 CS333_CFLAGS = 
 CS333_UPROGS =
 CS333_TPROGS =
@@ -208,7 +208,7 @@ fs.img: mkfs README README-PSU $(UPROGS)
 -include *.d
 
 clean: 
-	rm -rf *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
+	rm -rf _* *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
 	*.o *.d *.asm *.sym vectors.S bootblock entryother \
 	initcode initcode.out kernel xv6.img fs.img mkfs \
 	.gdbinit \
