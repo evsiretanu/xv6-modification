@@ -1,4 +1,3 @@
-#include "RMME.h"
 #include "types.h"
 #include "defs.h"
 #include "param.h"
@@ -115,7 +114,7 @@ extern int sys_getprocs(void);
 extern int sys_setpriority(void);
 #endif
 
-#ifdef CS333_P51
+#ifdef CS333_P5
 extern int sys_chmod(void);
 extern int sys_chown(void);
 extern int sys_chgrp(void);
@@ -158,7 +157,7 @@ static int (*syscalls[])(void) = {
 #ifdef CS333_P3P4
 [SYS_setpriority] sys_setpriority,
 #endif
-#ifdef CS333_P51
+#ifdef CS333_P5
 [SYS_chmod] sys_chmod,
 [SYS_chown] sys_chown,
 [SYS_chgrp] sys_chgrp,
@@ -207,7 +206,7 @@ static char *syscallnames[] = {
 #ifdef CS333_P3P4
 [SYS_setpriority], "setpriority",
 #endif
-#ifdef CS333_P51
+#ifdef CS333_P5
 [SYS_chmod] sys_chmod,
 [SYS_chown] sys_chown,
 [SYS_chgrp] sys_chgrp,

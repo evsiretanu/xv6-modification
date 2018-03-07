@@ -47,7 +47,7 @@ int getprocs(uint max, struct uproc*);
 int setpriority(int, int);
 #endif
 
-#ifdef CS333_P51
+#ifdef CS333_P5
 int chmod(char*, int);
 int chown(char*, int);
 int chgrp(char*, int);

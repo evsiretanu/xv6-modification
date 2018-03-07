@@ -23,7 +23,7 @@ struct inode {
   uint size;
   uint addrs[NDIRECT+1];
 
-  #ifdef CS333_P51
+  #ifdef CS333_P5
   ushort uid;
   ushort gid;
   union mode_t mode;

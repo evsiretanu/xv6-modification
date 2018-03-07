@@ -1,4 +1,3 @@
-#include "RMME.h"
 //
 // File-system system calls.
 // Mostly argument checking, since we don't trust
@@ -442,7 +441,7 @@ sys_pipe(void)
   return 0;
 }
 
-#ifdef CS333_P51
+#ifdef CS333_P5
 int
 sys_chmod(void){
   char* pathname;

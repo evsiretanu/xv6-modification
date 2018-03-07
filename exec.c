@@ -1,4 +1,3 @@
-#include "RMME.h"
 #include "types.h"
 #include "param.h"
 #include "memlayout.h"
@@ -30,7 +29,7 @@ exec(char *path, char **argv)
   ilock(ip);
   pgdir = 0;
 
-  #ifdef  CS333_P51
+  #ifdef  CS333_P5
   if(ip->uid == proc->uid) {
     if(ip->mode.flags.u_x != 1)
       goto bad;
@@ -111,7 +110,7 @@ exec(char *path, char **argv)
   proc->tf->eip = elf.entry;  // main
   proc->tf->esp = sp;
 
-  #ifdef CS333_P51
+  #ifdef CS333_P5
   if(ip->mode.flags.setuid == 1)
     proc->uid = ip->uid;
   #endif

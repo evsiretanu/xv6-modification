@@ -21,7 +21,7 @@ struct superblock {
 };
 
 
-#ifdef CS333_P51
+#ifdef CS333_P5
 #define NDIRECT 10
 #else
 #define NDIRECT 12
@@ -30,7 +30,7 @@ struct superblock {
 #define NINDIRECT (BSIZE / sizeof(uint))
 #define MAXFILE (NDIRECT + NINDIRECT)
 
-#ifdef CS333_P51
+#ifdef CS333_P5
 union mode_t {
   struct {
     uint o_x : 1;
@@ -64,7 +64,7 @@ struct dinode {
   uint size;            // Size of file (bytes)
   uint addrs[NDIRECT+1];   // Data block addresses
 
-  #ifdef CS333_P51
+  #ifdef CS333_P5
   ushort uid;
   ushort gid;
   union mode_t mode;

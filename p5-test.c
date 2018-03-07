@@ -6,7 +6,7 @@
 #include "user.h"
 #include "stat.h"
 #include "p5-test.h"
-#define CS333_P51 1
+
 static int
 canRun(char *name)
 {

@@ -3,7 +3,7 @@
 #define T_DEV  3   // Device
 
 
-#ifdef CS333_P51
+#ifdef CS333_P5
 union stat_mode_t {
   struct {
     uint o_x : 1;
@@ -31,7 +31,7 @@ struct stat {
   short nlink; // Number of links to file
   uint size;   // Size of file in bytes
 
-  #ifdef CS333_P51
+  #ifdef CS333_P5
   ushort uid;
   ushort gid;
   union stat_mode_t mode;

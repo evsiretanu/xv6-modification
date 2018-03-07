@@ -1,5 +1,3 @@
-#include "RMME.h"
-#include "RMME.h"
 // File system implementation.  Five layers:
 //   + Blocks: allocator for raw disk blocks.
 //   + Log: crash recovery for multi-step updates.
@@ -189,7 +187,7 @@ ialloc(uint dev, short type)
       memset(dip, 0, sizeof(*dip));
       dip->type = type;
 
-      #ifdef CS333_P51
+      #ifdef CS333_P5
       dip->uid = DEFUID;
       dip->gid = DEFGID;
       dip->mode.asInt = DEFAULT_MODE;
@@ -217,7 +215,7 @@ iupdate(struct inode *ip)
   dip->minor = ip->minor;
   dip->nlink = ip->nlink;
   dip->size = ip->size;
-  #ifdef CS333_P51
+  #ifdef CS333_P5
   dip->uid = ip->uid;
   dip->gid = ip->gid;
   dip->mode.asInt = ip->mode.asInt;
@@ -300,7 +298,7 @@ ilock(struct inode *ip)
     ip->nlink = dip->nlink;
     ip->size = dip->size;
 
-    #ifdef CS333_P51
+    #ifdef CS333_P5
     ip->uid = dip->uid;
     ip->gid = dip->gid;
     ip->mode.asInt = dip->mode.asInt;
@@ -446,7 +444,7 @@ stati(struct inode *ip, struct stat *st)
   st->type = ip->type;
   st->nlink = ip->nlink;
   st->size = ip->size;
-  #ifdef CS333_P51
+  #ifdef CS333_P5
   st->uid = ip->uid;
   st->gid = ip->gid;
   st->mode.asInt = ip->mode.asInt;
@@ -674,7 +672,7 @@ nameiparent(char *path, char *name)
   return namex(path, 1, name);
 }
 
-#ifdef CS333_P51
+#ifdef CS333_P5
 int
 chmod(char* pathname, int mode) {
   struct inode *ip;

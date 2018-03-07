@@ -1,13 +1,12 @@
-#include "RMME.h"
-/*
+
 #include "types.h"
 #include "stat.h"
 #include "user.h"
 #include "fs.h"
-*/
-#ifdef CS333_P51
 
-#include "print_mode.c"
+#ifdef CS333_P5
+
+//#include "print_mode.c"
 #endif
 char*
 fmtname(char *path)
@@ -50,8 +49,8 @@ ls(char *path)
   printf(1, "mode\t\tname\t\tuid\tgid\tinode\tsize\n");
   switch(st.type){
   case T_FILE:
-    print_mode(&st);
-    printf(1, "\t%s\t%d\t%d\t%d\n", fmtname(path), st.type, st.ino, st.size);
+    //print_mode(&st);
+    //printf(1, "\t%s\t%d\t%d\t%d\n", fmtname(path), st.type, st.ino, st.size);
     break;
   
   case T_DIR:
@@ -71,8 +70,8 @@ ls(char *path)
         printf(1, "ls: cannot stat %s\n", buf);
         continue;
       }
-      print_mode(&st);
-      printf(1, "\t%s\t%d\t%d\t%d\t%d\n", fmtname(buf), st.uid, st.gid, st.ino, st.size);
+      //print_mode(&st);
+      //printf(1, "\t%s\t%d\t%d\t%d\t%d\n", fmtname(buf), st.uid, st.gid, st.ino, st.size);
     }
     break;
   }

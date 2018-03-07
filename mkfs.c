@@ -1,4 +1,3 @@
-#include "RMME.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -232,7 +231,7 @@ ialloc(ushort type)
   din.nlink = xshort(1);
   din.size = xint(0);
 
-  #ifdef CS333_P51
+  #ifdef CS333_P5
   din.uid = xshort(DEFUID);
   din.gid = xshort(DEFGID);
   din.mode.asInt = DEFAULT_MODE;

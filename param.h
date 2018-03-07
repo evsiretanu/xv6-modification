@@ -25,6 +25,6 @@
 #define TICKS_TO_PROMOTE  200 // ticks to adjust priorities
 #endif
 
-#ifdef  CS333_P51
+#ifdef  CS333_P5
 #define  DEFAULT_MODE 0755
 #endif
