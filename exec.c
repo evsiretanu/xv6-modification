@@ -6,8 +6,11 @@
 #include "defs.h"
 #include "x86.h"
 #include "elf.h"
+
+#ifdef CS333_P5
 #include "fs.h"
 #include "file.h"
+#endif
 
 
 int

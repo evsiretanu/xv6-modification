@@ -700,7 +700,7 @@ int
 chown(char* pathname, int owner) {
   struct inode *ip;
 
-  if(owner < 0 || owner > 32767)  // Check for uid validity
+  if(owner < 0 || owner > 32767 || !pathname)  // Check for uid validity
     return -1;
 
   begin_op();
@@ -722,7 +722,7 @@ int
 chgrp(char* pathname, int group) {
   struct inode *ip;
 
-  if(group < 0 || group > 32767)
+  if(group < 0 || group > 32767 || !pathname)
     return -1;
 
   begin_op();
