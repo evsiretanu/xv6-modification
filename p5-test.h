@@ -25,8 +25,10 @@
 
 // used in several places
 int NUMPERMSTOCHECK = 4;
-char perms[] = {01544, 01454, 01445, 01666};
+//char perms[] = {01544, 01454, 01445, 01666};
+int perms[] = {01544, 01454, 01445, 01666};
 enum {procuid, procgid, fileuid, filegid};
+//enum {procuid, procgid, fileuid, filegid};
 int testperms[][4] = {
   // {proc-uid, proc-gid, file-uid, file-gid}
   {212, 323, 212, 434}, // uids match

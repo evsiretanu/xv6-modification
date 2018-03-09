@@ -59,4 +59,5 @@ print_mode(struct stat* st)
 
   return;
 }
+
 #endif

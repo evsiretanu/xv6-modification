@@ -90,7 +90,7 @@ main(int argc, char *argv[])
     exit(1);
   }
 
-  // 1 fs block = 1 disk sector
+  // 1 fs block = 1 disk sectorpa
   nmeta = 2 + nlog + ninodeblocks + nbitmap;
   nblocks = FSSIZE - nmeta;
 
@@ -230,6 +230,13 @@ ialloc(ushort type)
   din.type = xshort(type);
   din.nlink = xshort(1);
   din.size = xint(0);
+
+  #ifdef CS333_P5
+  din.uid = xshort(DEFUID);
+  din.gid = xshort(DEFGID);
+  din.mode.asInt = DEFAULT_MODE;
+  #endif
+
   winode(inum, &din);
   return inum;
 }

@@ -14,6 +14,7 @@
 #define FSSIZE       2000  // size of file system in blocks  // CS333 requires a larger FS.
 
 #ifdef CS333_P2
+// These values are used both for processes and files
 #define DEFUID       0    // default uid for a process
 #define DEFGID       0    // default gid for a process
 #endif
@@ -22,4 +23,8 @@
 #define MAX               7   // Maximum process priority
 #define BUDGET            20 // process budget
 #define TICKS_TO_PROMOTE  200 // ticks to adjust priorities
+#endif
+
+#ifdef  CS333_P5
+#define  DEFAULT_MODE 0755
 #endif
